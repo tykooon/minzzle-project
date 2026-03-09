@@ -49,6 +49,14 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
+      # ── Test SSH connection ───────────────────────────────────────
+      - name: Test SSH
+        run: |
+          ssh -vvv -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "echo SSH_OK" 2>&1 | tail -50
+
       # ── Deploy static frontend ────────────────────────────────────
       - name: Deploy web
         run: |
