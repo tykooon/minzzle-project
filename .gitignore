@@ -1,0 +1,24 @@
+# ── .NET / ASP.NET Core ──────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.db
+*.db-shm
+*.db-wal
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# ── Node / Vite / React ──────────────────────────────
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+
+# ── Misc ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log

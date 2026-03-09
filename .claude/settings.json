@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5129/api/games/fillby5/levels)",
+      "Bash(curl -s http://localhost:5129/api/games/fillby5/levels/level-001)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(bun install)",
+      "Bash(npm install)",
+      "Bash(curl -s http://localhost:5129/api/games/fillby5/levels/level-002)",
+      "Bash(python -m json.tool)"
+    ]
+  }
+}

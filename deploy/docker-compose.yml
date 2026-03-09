@@ -1,0 +1,16 @@
+# Production Docker Compose — runs on the VPS
+# Copy this file to ~/minzzle/ on the VPS alongside a .env file.
+#
+# Required .env vars:
+#   GITHUB_REPO_OWNER=<your-github-username>
+
+services:
+  minzzle-server:
+    image: ghcr.io/${GITHUB_REPO_OWNER}/minzzle-server:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5129:5129"   # only accessible locally; Nginx proxies from outside
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    # Put additional secrets (future DB connection strings, etc.) in .env
+    env_file: .env
