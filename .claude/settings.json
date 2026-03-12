@@ -8,7 +8,9 @@
       "Bash(bun install)",
       "Bash(npm install)",
       "Bash(curl -s http://localhost:5129/api/games/fillby5/levels/level-002)",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(cat c:/Repos/minzzle-project/.github/workflows/*.yml)",
+      "Bash(xargs wc:*)"
     ]
   }
 }

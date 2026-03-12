@@ -1,16 +1,22 @@
 using GamesHub.Server.Contracts.Games;
-using GamesHub.Server.Storage.InMemory;
+using GamesHub.Server.Data;
 
 namespace GamesHub.Server.Services;
 
-public class GamesService(InMemoryStore store)
+public class GamesService(AppDbContext db)
 {
     public IEnumerable<GameDto> GetAll() =>
-        store.Games.Select(g => new GameDto(g.Id, g.Name, g.Description, g.LevelCount));
+        db.Games
+            .Select(g => new GameDto(
+                g.Id, g.Name, g.Description,
+                db.Levels.Count(l => l.GameId == g.Id)))
+            .ToList();
 
     public GameDto? GetById(string gameId) =>
-        store.Games
+        db.Games
             .Where(g => g.Id == gameId)
-            .Select(g => new GameDto(g.Id, g.Name, g.Description, g.LevelCount))
+            .Select(g => new GameDto(
+                g.Id, g.Name, g.Description,
+                db.Levels.Count(l => l.GameId == g.Id)))
             .FirstOrDefault();
 }

@@ -1,3 +1,4 @@
+using GamesHub.Server.Contracts.Levels;
 using GamesHub.Server.Services;
 
 namespace GamesHub.Server.Api.Levels;
@@ -15,6 +16,24 @@ public static class LevelsEndpoints
         {
             var level = svc.GetById(gameId, levelId);
             return level is null ? Results.NotFound() : Results.Ok(level);
+        });
+
+        group.MapPost("/", (string gameId, SaveLevelRequest req, LevelsService svc) =>
+        {
+            var created = svc.CreateLevel(gameId, req);
+            return Results.Created($"/api/games/{gameId}/levels/{created.Id}", created);
+        });
+
+        group.MapPut("/{levelId}", (string gameId, string levelId, SaveLevelRequest req, LevelsService svc) =>
+        {
+            var updated = svc.UpdateLevel(gameId, levelId, req);
+            return updated is null ? Results.NotFound() : Results.Ok(updated);
+        });
+
+        group.MapDelete("/{levelId}", (string gameId, string levelId, LevelsService svc) =>
+        {
+            var deleted = svc.DeleteLevel(gameId, levelId);
+            return deleted ? Results.NoContent() : Results.NotFound();
         });
 
         return app;

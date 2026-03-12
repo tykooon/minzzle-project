@@ -12,5 +12,9 @@ services:
       - "127.0.0.1:5129:5129"   # only accessible locally; Nginx proxies from outside
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-    # Put additional secrets (future DB connection strings, etc.) in .env
     env_file: .env
+    volumes:
+      - minzzle-data:/app/data   # SQLite database persistence
+
+volumes:
+  minzzle-data:
