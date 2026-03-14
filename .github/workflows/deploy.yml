@@ -83,6 +83,9 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             server/src/GamesHub.Server/Data/minzzle.db \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/data/minzzle.db"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "rm -f ~/minzzle/data/minzzle.db-wal ~/minzzle/data/minzzle.db-shm"
 
       # ── Pull new image & restart container ────────────────────────
       - name: Deploy server

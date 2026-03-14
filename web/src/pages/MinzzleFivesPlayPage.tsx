@@ -131,7 +131,7 @@ const MinzzleFivesGame = ({ level }: { level: LevelFull }) => {
       <footer className="border-t border-border/50 px-4 py-3 flex items-center justify-center gap-4 shrink-0">
         <button
           onClick={() => dispatch({ type: 'CANCEL_MOVE' })}
-          disabled={state.trailEdges.length === 0}
+          disabled={state.trailNodes.length === 0}
           className="px-4 py-2 rounded-lg border border-border text-sm font-body text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           Cancel Move

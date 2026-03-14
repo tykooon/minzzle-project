@@ -30,11 +30,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   }
 }
 
+function hasAvailableEdge(state: GameState, nodeId: number): boolean {
+  return state.level.edges.some(
+    e => (e.a === nodeId || e.b === nodeId) && !state.usedEdges.has(e.id)
+  );
+}
+
 function handleStep(state: GameState, nodeId: number): GameState {
   if (state.won) return state;
 
-  // If no trail yet, start from this node
+  // If no trail yet, start from this node (only if it has unused edges)
   if (state.trailNodes.length === 0) {
+    if (!hasAvailableEdge(state, nodeId)) return state;
     return { ...state, trailNodes: [nodeId], trailEdges: [] };
   }
 
@@ -50,7 +57,11 @@ function handleStep(state: GameState, nodeId: number): GameState {
 
   // Find edge between lastNode and nodeId
   const edge = findEdge(state.level, lastNode, nodeId);
-  if (!edge) return state; // no edge → invalid
+  if (!edge) {
+    // Non-adjacent: cancel current trail, start fresh from clicked node (if it has available edges)
+    if (!hasAvailableEdge(state, nodeId)) return state;
+    return { ...state, trailNodes: [nodeId], trailEdges: [] };
+  }
 
   // Check if edge already used (committed)
   if (state.usedEdges.has(edge.id)) return state;
