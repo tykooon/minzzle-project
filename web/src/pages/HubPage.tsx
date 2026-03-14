@@ -1,19 +1,24 @@
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/apiClient';
 
-const games = [
-  {
-    id: 'minzzle-fives',
-    name: 'Minzzle Fives',
-    description: 'Cover every edge in moves of exactly 5. Plan your path wisely.',
-    icon: '⬡',
-    color: 'from-neon-cyan/20 to-neon-purple/20',
-    borderColor: 'border-neon-cyan/30',
-    levels: 3,
-  },
-];
+const GAME_ID = 'minzzle-fives';
+
+const gameInfo = {
+  id: GAME_ID,
+  name: 'Minzzle Fives',
+  description: 'Cover every edge in moves of exactly 5. Plan your path wisely.',
+  icon: '⬡',
+  color: 'from-neon-cyan/20 to-neon-purple/20',
+  borderColor: 'border-neon-cyan/30',
+};
 
 const HubPage = () => {
   const navigate = useNavigate();
+  const { data: levels } = useQuery({
+    queryKey: [GAME_ID, 'levels'],
+    queryFn: () => api.getLevels(GAME_ID),
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -30,7 +35,7 @@ const HubPage = () => {
       {/* Games Grid */}
       <main className="flex-1 flex items-center justify-center p-8">
         <div className="grid gap-6 max-w-2xl w-full">
-          {games.map((game, i) => (
+          {[gameInfo].map((game, i) => (
             <button
               key={game.id}
               onClick={() => navigate(`/${game.id}`)}
@@ -47,7 +52,7 @@ const HubPage = () => {
                     {game.description}
                   </p>
                   <span className="inline-block mt-3 text-xs font-body text-primary/70 border border-primary/20 rounded-full px-3 py-1">
-                    {game.levels} levels
+                    {levels ? `${levels.length} levels` : '…'}
                   </span>
                 </div>
               </div>
