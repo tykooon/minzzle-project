@@ -14,7 +14,4 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
     env_file: .env
     volumes:
-      - minzzle-data:/app/data   # SQLite database persistence
-
-volumes:
-  minzzle-data:
+      - ./data:/app/data   # SQLite database — bind mount so CI/CD can update it

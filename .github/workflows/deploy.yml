@@ -73,6 +73,17 @@ jobs:
             deploy/docker-compose.yml \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/docker-compose.yml"
 
+      # ── Sync SQLite database ──────────────────────────────────────
+      - name: Sync database
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "mkdir -p ~/minzzle/data"
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            server/src/GamesHub.Server/Data/minzzle.db \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/data/minzzle.db"
+
       # ── Pull new image & restart container ────────────────────────
       - name: Deploy server
         run: |
