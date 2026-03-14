@@ -1,5 +1,13 @@
 // Canvas renderer for Fillby5
 import { GameState, LevelData, NodeData } from '../engine/types';
+import { assignMoveColors } from '../engine/moveColors';
+
+function hexToGlow(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 const COLORS = {
   bg: '#0d1117',
@@ -11,6 +19,7 @@ const COLORS = {
   nodeActive: '#00e5ff',
   nodeTrailHead: '#ff9100',
   nodeFill: '#0d1117',
+  nodeWon: 'rgba(150, 170, 190, 0.75)',
   winGlow: '#76ff03',
 };
 
@@ -28,10 +37,12 @@ export function computeAutoFit(level: LevelData, canvasW: number, canvasH: numbe
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   const rangeX = maxX - minX || 1;
   const rangeY = maxY - minY || 1;
-  const padding = 80;
-  const scaleX = (canvasW - padding * 2) / rangeX;
-  const scaleY = (canvasH - padding * 2) / rangeY;
-  const scale = Math.min(scaleX, scaleY, 120);
+  // Use a fixed ideal scale so the puzzle renders at a consistent physical size
+  // regardless of canvas/viewport size. Only shrinks below ideal if the puzzle
+  // genuinely doesn't fit (large level or extreme zoom).
+  const idealScale = 80;
+  const maxFitScale = Math.min((canvasW * 0.85) / rangeX, (canvasH * 0.85) / rangeY);
+  const scale = Math.min(idealScale, maxFitScale);
   const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
   return {
@@ -75,29 +86,54 @@ export function render(
     ctx.stroke();
   }
 
-  // 2. Used edges (thicker, cyan, glow)
-  for (const edge of level.edges) {
-    if (!usedEdges.has(edge.id)) continue;
-    const a = nodeMap.get(edge.a)!;
-    const b = nodeMap.get(edge.b)!;
-    const [ax, ay] = toScreen(a, vt);
-    const [bx, by] = toScreen(b, vt);
-
-    // glow
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = won ? 'rgba(118, 255, 3, 0.3)' : 'rgba(0, 229, 255, 0.3)';
-    ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(bx, by);
-    ctx.stroke();
-
-    // line
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = won ? COLORS.winGlow : COLORS.edgeUsed;
-    ctx.beginPath();
-    ctx.moveTo(ax, ay);
-    ctx.lineTo(bx, by);
-    ctx.stroke();
+  // 2. Used edges — when won: colored per-move; otherwise: uniform cyan
+  if (won && state.history.length > 0) {
+    const edgeMap = new Map(level.edges.map(e => [e.id, e]));
+    const moveColors = assignMoveColors(state.history, level);
+    for (let mi = 0; mi < state.history.length; mi++) {
+      const color = moveColors[mi];
+      const glow = hexToGlow(color, 0.35);
+      for (const eid of state.history[mi]) {
+        const edge = edgeMap.get(eid);
+        if (!edge) continue;
+        const a = nodeMap.get(edge.a)!;
+        const b = nodeMap.get(edge.b)!;
+        const [ax, ay] = toScreen(a, vt);
+        const [bx, by] = toScreen(b, vt);
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = glow;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+      }
+    }
+  } else {
+    for (const edge of level.edges) {
+      if (!usedEdges.has(edge.id)) continue;
+      const a = nodeMap.get(edge.a)!;
+      const b = nodeMap.get(edge.b)!;
+      const [ax, ay] = toScreen(a, vt);
+      const [bx, by] = toScreen(b, vt);
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = COLORS.edgeUsed;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
   }
 
   // 3. Trail edges (orange glow)
@@ -124,8 +160,8 @@ export function render(
     ctx.stroke();
   }
 
-  // 4. Nodes
-  const nodeRadius = Math.max(8, vt.scale * 0.08);
+  // 4. Nodes — radius is always a fixed proportion of scale (no pixel floor)
+  const nodeRadius = vt.scale * 0.12;
   for (const node of level.nodes) {
     const [sx, sy] = toScreen(node, vt);
     const isTrailHead = trailNodes.length > 0 && trailNodes[trailNodes.length - 1] === node.id;
@@ -134,7 +170,7 @@ export function render(
     // Outer glow
     if (isTrailHead) {
       ctx.beginPath();
-      ctx.arc(sx, sy, nodeRadius + 6, 0, Math.PI * 2);
+      ctx.arc(sx, sy, nodeRadius * 1.6, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 145, 0, 0.3)';
       ctx.fill();
     }
@@ -150,7 +186,7 @@ export function render(
       : isInTrail
         ? COLORS.edgeTrail
         : won
-          ? COLORS.winGlow
+          ? COLORS.nodeWon
           : COLORS.nodeDefault;
     ctx.stroke();
 

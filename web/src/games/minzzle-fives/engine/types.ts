@@ -37,6 +37,19 @@ export interface GameState {
   won: boolean;
 }
 
+/**
+ * A completed solution to a level.
+ * Stored client-side now; will be persisted server-side once auth is added.
+ * `moves` mirrors GameState.history — each inner array is the edge IDs of one completed move.
+ */
+export interface Solution {
+  id: string;          // uuid, generated at win time
+  levelId: string;
+  userId?: string;     // undefined until auth is implemented
+  solvedAt: string;    // ISO 8601
+  moves: number[][];   // edge ID arrays, one per move, in completion order
+}
+
 export type GameAction =
   | { type: 'STEP'; nodeId: number }
   | { type: 'CANCEL_MOVE' }

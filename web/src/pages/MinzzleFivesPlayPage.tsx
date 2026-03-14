@@ -25,12 +25,15 @@ const MinzzleFivesGame = ({ level }: { level: LevelFull }) => {
     canvas.width = rect.width * devicePixelRatio;
     canvas.height = rect.height * devicePixelRatio;
     vtRef.current = computeAutoFit(level, rect.width, rect.height);
-  }, [level]);
+    triggerRender();
+  }, [level, triggerRender]);
 
   useEffect(() => {
     updateFit();
-    window.addEventListener('resize', updateFit);
-    return () => window.removeEventListener('resize', updateFit);
+    const observer = new ResizeObserver(updateFit);
+    const canvas = canvasRef.current;
+    if (canvas) observer.observe(canvas);
+    return () => observer.disconnect();
   }, [updateFit]);
 
   useEffect(() => {
@@ -97,59 +100,56 @@ const MinzzleFivesGame = ({ level }: { level: LevelFull }) => {
           className="absolute inset-0 w-full h-full cursor-crosshair touch-none select-none"
           onClick={handleCanvasClick}
         />
-
-        {/* Win overlay */}
-        {state.won && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in-up">
-            <div className="text-center">
-              <h2
-                className="text-4xl font-display font-black text-neon-green mb-4"
-                style={{ textShadow: '0 0 20px rgba(118, 255, 3, 0.5), 0 0 40px rgba(118, 255, 3, 0.3)' }}
-              >
-                SOLVED!
-              </h2>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => dispatch({ type: 'RESET' })}
-                  className="px-5 py-2 rounded-lg border border-border text-foreground font-body text-sm hover:bg-secondary transition-colors"
-                >
-                  Replay
-                </button>
-                <button
-                  onClick={() => navigate('/minzzle-fives')}
-                  className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm hover:bg-primary/90 transition-colors"
-                >
-                  More Levels
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Bottom controls */}
-      <footer className="border-t border-border/50 px-4 py-3 flex items-center justify-center gap-4 shrink-0">
-        <button
-          onClick={() => dispatch({ type: 'CANCEL_MOVE' })}
-          disabled={state.trailNodes.length === 0}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-body text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          Cancel Move
-        </button>
-        <button
-          onClick={() => dispatch({ type: 'UNDO_MOVE' })}
-          disabled={state.history.length === 0}
-          className="px-4 py-2 rounded-lg border border-border text-sm font-body text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          Undo Last
-        </button>
-        <button
-          onClick={() => dispatch({ type: 'RESET' })}
-          className="px-4 py-2 rounded-lg border border-destructive/30 text-sm font-body text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          Reset
-        </button>
-      </footer>
+      {/* Win strip — replaces footer so canvas is not overlapped */}
+      {state.won ? (
+        <div className="border-t border-neon-green/30 bg-background px-4 py-4 flex flex-col items-center gap-3 shrink-0 animate-fade-in-up">
+          <h2
+            className="text-3xl font-display font-black text-neon-green"
+            style={{ textShadow: '0 0 20px rgba(118, 255, 3, 0.5), 0 0 40px rgba(118, 255, 3, 0.3)' }}
+          >
+            SOLVED!
+          </h2>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => dispatch({ type: 'RESET' })}
+              className="px-5 py-2 rounded-lg border border-border text-foreground font-body text-sm hover:bg-secondary transition-colors"
+            >
+              Replay
+            </button>
+            <button
+              onClick={() => navigate('/minzzle-fives')}
+              className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm hover:bg-primary/90 transition-colors"
+            >
+              More Levels
+            </button>
+          </div>
+        </div>
+      ) : (
+        <footer className="border-t border-border/50 px-4 py-3 flex items-center justify-center gap-4 shrink-0">
+          <button
+            onClick={() => dispatch({ type: 'CANCEL_MOVE' })}
+            disabled={state.trailNodes.length === 0}
+            className="px-4 py-2 rounded-lg border border-border text-sm font-body text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Cancel Move
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'UNDO_MOVE' })}
+            disabled={state.history.length === 0}
+            className="px-4 py-2 rounded-lg border border-border text-sm font-body text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Undo Last
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'RESET' })}
+            className="px-4 py-2 rounded-lg border border-destructive/30 text-sm font-body text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            Reset
+          </button>
+        </footer>
+      )}
     </div>
   );
 };
