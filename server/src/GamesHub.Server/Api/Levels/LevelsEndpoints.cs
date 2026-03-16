@@ -30,6 +30,12 @@ public static class LevelsEndpoints
             return updated is null ? Results.NotFound() : Results.Ok(updated);
         });
 
+        group.MapPut("/{levelId}/solution", (string gameId, string levelId, SaveSolutionRequest req, LevelsService svc) =>
+        {
+            var updated = svc.SaveSolution(gameId, levelId, req.SolutionJson);
+            return updated is null ? Results.NotFound() : Results.Ok(updated);
+        });
+
         group.MapDelete("/{levelId}", (string gameId, string levelId, LevelsService svc) =>
         {
             var deleted = svc.DeleteLevel(gameId, levelId);

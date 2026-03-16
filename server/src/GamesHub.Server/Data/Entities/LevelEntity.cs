@@ -12,4 +12,5 @@ public class LevelEntity
     // Stored as JSON text columns
     public string NodesJson { get; set; } = "[]";
     public string EdgesJson { get; set; } = "[]";
+    public string? SolutionJson { get; set; }
 }

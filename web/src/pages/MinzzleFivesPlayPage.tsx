@@ -8,7 +8,13 @@ import { useGestures } from '../games/minzzle-fives/input/useGestures';
 
 // ── Game canvas (only rendered once level is loaded) ─────────────────
 
-const MinzzleFivesGame = ({ level }: { level: LevelFull }) => {
+export const MinzzleFivesGame = ({
+  level,
+  onSolved,
+}: {
+  level: LevelFull;
+  onSolved?: (moves: number[][]) => void;
+}) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const vtRef = useRef<ViewTransform>({ offsetX: 0, offsetY: 0, scale: 80 });
@@ -47,6 +53,11 @@ const MinzzleFivesGame = ({ level }: { level: LevelFull }) => {
     render(ctx, state, vtRef.current, rect.width, rect.height);
     ctx.restore();
   }, [state, vtVersion]);
+
+  useEffect(() => {
+    if (state.won) onSolved?.(state.history);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.won]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

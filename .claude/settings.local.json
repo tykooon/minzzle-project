@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dotnet tool:*)",
       "Bash(dotnet-ef migrations:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet build:*)"
     ]
   }
 }

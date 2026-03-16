@@ -41,6 +41,7 @@ export interface LevelSummary {
   difficulty: number;
   edgeCount: number;
   estimatedMoves: number;
+  hasSolution: boolean;
 }
 
 export interface LevelFull {
@@ -51,6 +52,11 @@ export interface LevelFull {
   moveLen: number;
   nodes: { id: number; x: number; y: number }[];
   edges: { id: number; a: number; b: number }[];
+  solutionJson: string | null;
+}
+
+export interface SaveSolutionRequest {
+  solutionJson: string;
 }
 
 export interface SaveLevelRequest {
@@ -79,4 +85,7 @@ export const api = {
 
   deleteLevel: (gameId: string, levelId: string): Promise<void> =>
     del(`/api/games/${gameId}/levels/${levelId}`),
+
+  saveLevelSolution: (gameId: string, levelId: string, data: SaveSolutionRequest): Promise<LevelFull> =>
+    put(`/api/games/${gameId}/levels/${levelId}/solution`, data),
 };

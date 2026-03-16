@@ -10,5 +10,6 @@ public record LevelDto(
     int SchemaVersion,
     int MoveLen,
     NodeDto[] Nodes,
-    EdgeDto[] Edges
+    EdgeDto[] Edges,
+    string? SolutionJson
 );

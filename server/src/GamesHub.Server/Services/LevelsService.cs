@@ -25,7 +25,8 @@ public class LevelsService(AppDbContext db)
                 return new LevelSummaryDto(
                     l.Id, l.Name, l.Difficulty,
                     EdgeCount: edges.Length,
-                    EstimatedMoves: edges.Length / l.MoveLen
+                    EstimatedMoves: edges.Length / l.MoveLen,
+                    HasSolution: l.SolutionJson != null
                 );
             });
 
@@ -77,8 +78,18 @@ public class LevelsService(AppDbContext db)
         return true;
     }
 
+    public LevelDto? SaveSolution(string gameId, string levelId, string solutionJson)
+    {
+        var entity = db.Levels.FirstOrDefault(l => l.GameId == gameId && l.Id == levelId);
+        if (entity is null) return null;
+        entity.SolutionJson = solutionJson;
+        db.SaveChanges();
+        return MapToDto(entity);
+    }
+
     private LevelDto MapToDto(LevelEntity l) =>
         new(l.Id, l.Name, l.Difficulty, l.SchemaVersion, l.MoveLen,
             Nodes: DeserNodes(l.NodesJson),
-            Edges: DeserEdges(l.EdgesJson));
+            Edges: DeserEdges(l.EdgesJson),
+            SolutionJson: l.SolutionJson);
 }

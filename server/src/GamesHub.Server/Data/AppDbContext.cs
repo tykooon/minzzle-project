@@ -30,6 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(l => l.GameId);
             e.Property(l => l.NodesJson).HasColumnName("Nodes");
             e.Property(l => l.EdgesJson).HasColumnName("Edges");
+            e.Property(l => l.SolutionJson).HasColumnName("Solution");
 
             // Seed the 3 existing levels
             e.HasData(

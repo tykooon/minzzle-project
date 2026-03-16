@@ -9,6 +9,7 @@ import MinzzleFivesPlayPage from "./pages/MinzzleFivesPlayPage";
 import NotFound from "./pages/NotFound";
 import AdminLevelsPage from "./pages/admin/AdminLevelsPage";
 import AdminLevelEditorPage from "./pages/admin/AdminLevelEditorPage";
+import AdminLevelSolvePage from "./pages/admin/AdminLevelSolvePage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/minzzle-fives/play/:levelId" element={<MinzzleFivesPlayPage />} />
           <Route path="/admin/levels" element={<AdminLevelsPage />} />
           <Route path="/admin/levels/new" element={<AdminLevelEditorPage />} />
+          <Route path="/admin/levels/:levelId/solve" element={<AdminLevelSolvePage />} />
           <Route path="/admin/levels/:levelId" element={<AdminLevelEditorPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

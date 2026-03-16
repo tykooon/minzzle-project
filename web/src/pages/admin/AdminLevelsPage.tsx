@@ -47,8 +47,9 @@ const AdminLevelsPage = () => {
               <TableHead>Name</TableHead>
               <TableHead className="w-24 text-center">Difficulty</TableHead>
               <TableHead className="w-20 text-center">Edges</TableHead>
-              <TableHead className="w-28 text-center">Est. Moves</TableHead>
-              <TableHead className="w-32 text-right">Actions</TableHead>
+              <TableHead className="w-20 text-center">Moves</TableHead>
+              <TableHead className="w-24 text-center">Solution</TableHead>
+              <TableHead className="w-48 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,8 +60,20 @@ const AdminLevelsPage = () => {
                 <TableCell className="text-center">{level.difficulty}</TableCell>
                 <TableCell className="text-center">{level.edgeCount}</TableCell>
                 <TableCell className="text-center">{level.estimatedMoves}</TableCell>
+                <TableCell className="text-center">
+                  {level.hasSolution
+                    ? <span className="text-neon-green text-xs font-semibold">✓ Yes</span>
+                    : <span className="text-muted-foreground text-xs">—</span>}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/levels/${level.id}/solve`)}
+                    >
+                      Solve
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -96,7 +109,7 @@ const AdminLevelsPage = () => {
             ))}
             {levels?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No levels yet. Create one!
                 </TableCell>
               </TableRow>
