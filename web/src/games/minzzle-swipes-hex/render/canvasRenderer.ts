@@ -3,6 +3,53 @@ import { HexGameState, HexBoardData } from '../engine/types';
 const BG = '#0d1117';
 const SQRT3 = Math.sqrt(3);
 
+// Visual style — mirrors square swipes: cells shrink from their centroid
+// leaving a visible gap between neighbours, with rounded corners.
+const CELL_SCALE = 0.90;   // 10% inward → ~3-4 px gap at typical board size
+const CORNER_RADIUS = 4;   // px, same ballpark as square swipes border-radius
+
+function shrinkCell(
+  verts: [number, number][],
+  cx: number, cy: number,
+  scale: number
+): [number, number][] {
+  return verts.map(([vx, vy]) => [
+    cx + (vx - cx) * scale,
+    cy + (vy - cy) * scale,
+  ]);
+}
+
+function drawRoundedTriangle(
+  ctx: CanvasRenderingContext2D,
+  verts: [number, number][],
+  radius: number
+) {
+  const n = 3;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const prev = verts[(i + n - 1) % n];
+    const curr = verts[i];
+    const next = verts[(i + 1) % n];
+
+    const dPx = prev[0] - curr[0], dPy = prev[1] - curr[1];
+    const dNx = next[0] - curr[0], dNy = next[1] - curr[1];
+    const lenP = Math.sqrt(dPx * dPx + dPy * dPy);
+    const lenN = Math.sqrt(dNx * dNx + dNy * dNy);
+    const r = Math.min(radius, lenP / 2, lenN / 2);
+
+    // Entry point: move from curr toward prev by r
+    const ex = curr[0] + (dPx / lenP) * r;
+    const ey = curr[1] + (dPy / lenP) * r;
+
+    if (i === 0) ctx.moveTo(ex, ey);
+    else ctx.lineTo(ex, ey);
+
+    // Arc at the corner: arcTo draws through curr toward next
+    ctx.arcTo(curr[0], curr[1], curr[0] + (dNx / lenN) * r, curr[1] + (dNy / lenN) * r, r);
+  }
+  ctx.closePath();
+}
+
 export interface HexViewTransform {
   offsetX: number;
   offsetY: number;
@@ -38,24 +85,19 @@ export function renderHex(
 
   for (const cell of boardData.cells) {
     const verts = cell.vertices.map(([x, y]) => toScreen(x, y, vt));
-    const color = cellColors[cell.id];
-
-    const highlightedLineIdx = highlightLine ? boardData.cellToLine[highlightLine.axis]?.get(cell.id) : undefined;
-    const isHighlighted = highlightLine && highlightedLineIdx === highlightLine.lineIndex;
+    const [cx, cy] = toScreen(cell.centroid[0], cell.centroid[1], vt);
+    const shrunk = shrinkCell(verts, cx, cy, CELL_SCALE);
 
     // Cell fill
-    ctx.beginPath();
-    ctx.moveTo(verts[0][0], verts[0][1]);
-    ctx.lineTo(verts[1][0], verts[1][1]);
-    ctx.lineTo(verts[2][0], verts[2][1]);
-    ctx.closePath();
-    ctx.fillStyle = color;
+    drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
+    ctx.fillStyle = cellColors[cell.id];
     ctx.fill();
 
     // Highlight overlay
     if (highlightLine) {
       const lineIdx = boardData.cellToLine[highlightLine.axis]?.get(cell.id);
       if (lineIdx === highlightLine.lineIndex) {
+        drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.fill();
       }
@@ -63,14 +105,10 @@ export function renderHex(
 
     // Win shimmer
     if (won) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+      drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
     }
-
-    // Border
-    ctx.strokeStyle = won ? 'rgba(118, 255, 3, 0.4)' : 'rgba(150, 170, 190, 0.15)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
   }
 
   // Hex outline
