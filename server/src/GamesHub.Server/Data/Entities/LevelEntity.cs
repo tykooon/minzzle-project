@@ -13,4 +13,5 @@ public class LevelEntity
     public string NodesJson { get; set; } = "[]";
     public string EdgesJson { get; set; } = "[]";
     public string? SolutionJson { get; set; }
+    public string? BoardJson { get; set; }
 }

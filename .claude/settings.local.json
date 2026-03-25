@@ -5,7 +5,18 @@
       "Bash(dotnet-ef migrations:*)",
       "Bash(npm run:*)",
       "Bash(dotnet ef:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Read(//c/Repos/pixel-perfect/src/pages/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes/engine/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes/render/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes/levels/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes-hex/engine/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes-hex/render/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/minzzle-swipes-hex/levels/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/fillby5/engine/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/fillby5/render/**)",
+      "Read(//c/Repos/pixel-perfect/src/games/fillby5/levels/**)",
+      "Read(//c/Repos/pixel-perfect/src/**)"
     ]
   }
 }

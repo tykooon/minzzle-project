@@ -25,7 +25,7 @@ public class LevelsService(AppDbContext db)
                 return new LevelSummaryDto(
                     l.Id, l.Name, l.Difficulty,
                     EdgeCount: edges.Length,
-                    EstimatedMoves: edges.Length / l.MoveLen,
+                    EstimatedMoves: l.MoveLen > 0 ? edges.Length / l.MoveLen : 0,
                     HasSolution: l.SolutionJson != null
                 );
             });
@@ -91,5 +91,6 @@ public class LevelsService(AppDbContext db)
         new(l.Id, l.Name, l.Difficulty, l.SchemaVersion, l.MoveLen,
             Nodes: DeserNodes(l.NodesJson),
             Edges: DeserEdges(l.EdgesJson),
-            SolutionJson: l.SolutionJson);
+            SolutionJson: l.SolutionJson,
+            BoardJson: l.BoardJson);
 }

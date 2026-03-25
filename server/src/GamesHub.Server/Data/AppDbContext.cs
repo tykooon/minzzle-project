@@ -15,12 +15,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         mb.Entity<GameEntity>(e =>
         {
             e.HasKey(g => g.Id);
-            e.HasData(new GameEntity
-            {
-                Id = "minzzle-fives",
-                Name = "Minzzle Fives",
-                Description = "Cover every edge of the graph using moves of exactly 5 edges.",
-            });
+            e.HasData(
+                new GameEntity { Id = "minzzle-fives",      Name = "Minzzle Fives",      Description = "Cover every edge of the graph using moves of exactly 5 edges." },
+                new GameEntity { Id = "minzzle-swipes",     Name = "Minzzle Swipes",     Description = "Slide rows and columns to restore the color grid." },
+                new GameEntity { Id = "minzzle-swipes-hex", Name = "Minzzle Swipes Hex", Description = "Slide hexagonal lines to restore the color pattern." }
+            );
         });
 
         // ── LevelEntity ───────────────────────────────────────────────
@@ -31,6 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(l => l.NodesJson).HasColumnName("Nodes");
             e.Property(l => l.EdgesJson).HasColumnName("Edges");
             e.Property(l => l.SolutionJson).HasColumnName("Solution");
+            e.Property(l => l.BoardJson).HasColumnName("Board");
 
             // Seed the 3 existing levels
             e.HasData(
@@ -114,6 +114,145 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                         new { id = 17, a = 5,  b = 10 }, new { id = 18, a = 6,  b = 11 },
                         new { id = 19, a = 7,  b = 12 }, new { id = 20, a = 8,  b = 13 }, new { id = 21, a = 9,  b = 14 },
                         new { id = 22, a = 0,  b = 6  }, new { id = 23, a = 2,  b = 8  }, new { id = 24, a = 7,  b = 11 },
+                    }),
+                },
+                // ── Minzzle Swipes levels ─────────────────────────────
+                new LevelEntity
+                {
+                    Id = "swipes-001", GameId = "minzzle-swipes", Name = "Tiny Quadrants",
+                    Difficulty = 1, SchemaVersion = 1, MoveLen = 2,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        rows = 4, cols = 4,
+                        solved = new[]
+                        {
+                            new[] { "#3b82f6", "#3b82f6", "#eab308", "#eab308" },
+                            new[] { "#3b82f6", "#3b82f6", "#eab308", "#eab308" },
+                            new[] { "#ef4444", "#ef4444", "#22c55e", "#22c55e" },
+                            new[] { "#ef4444", "#ef4444", "#22c55e", "#22c55e" },
+                        },
+                        scrambleMoves = new object[]
+                        {
+                            new { type = "row", index = 1 },
+                            new { type = "col", index = 2 },
+                        },
+                    }),
+                },
+                new LevelEntity
+                {
+                    Id = "swipes-002", GameId = "minzzle-swipes", Name = "Classic Quadrants",
+                    Difficulty = 2, SchemaVersion = 1, MoveLen = 5,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        rows = 6, cols = 6,
+                        solved = new[]
+                        {
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                        },
+                        scrambleMoves = new object[]
+                        {
+                            new { type = "row", index = 1 },
+                            new { type = "col", index = 4 },
+                            new { type = "row", index = 3 },
+                            new { type = "col", index = 0 },
+                            new { type = "row", index = 5 },
+                        },
+                    }),
+                },
+                new LevelEntity
+                {
+                    Id = "swipes-003", GameId = "minzzle-swipes", Name = "Tangled Quadrants",
+                    Difficulty = 3, SchemaVersion = 1, MoveLen = 8,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        rows = 6, cols = 6,
+                        solved = new[]
+                        {
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#3b82f6", "#3b82f6", "#3b82f6", "#eab308", "#eab308", "#eab308" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                            new[] { "#ef4444", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e" },
+                        },
+                        scrambleMoves = new object[]
+                        {
+                            new { type = "row", index = 0 },
+                            new { type = "col", index = 2 },
+                            new { type = "row", index = 4 },
+                            new { type = "col", index = 5 },
+                            new { type = "row", index = 2 },
+                            new { type = "col", index = 1 },
+                            new { type = "row", index = 3 },
+                            new { type = "col", index = 3 },
+                        },
+                    }),
+                },
+                // ── Minzzle Swipes Hex levels ─────────────────────────
+                new LevelEntity
+                {
+                    Id = "hex-001", GameId = "minzzle-swipes-hex", Name = "Hex Intro",
+                    Difficulty = 1, SchemaVersion = 1, MoveLen = 3,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        side = 2,
+                        colors = new[] { "#3b82f6", "#eab308", "#22c55e", "#ef4444", "#a855f7", "#f97316" },
+                        scrambleMoves = new object[]
+                        {
+                            new { axis = "horizontal", lineIndex = 1 },
+                            new { axis = "diagL",      lineIndex = 2 },
+                            new { axis = "diagR",      lineIndex = 0 },
+                        },
+                    }),
+                },
+                new LevelEntity
+                {
+                    Id = "hex-002", GameId = "minzzle-swipes-hex", Name = "Hex Medium",
+                    Difficulty = 2, SchemaVersion = 1, MoveLen = 5,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        side = 3,
+                        colors = new[] { "#3b82f6", "#eab308", "#22c55e", "#ef4444", "#a855f7", "#f97316" },
+                        scrambleMoves = new object[]
+                        {
+                            new { axis = "horizontal", lineIndex = 2 },
+                            new { axis = "diagR",      lineIndex = 3 },
+                            new { axis = "diagL",      lineIndex = 1 },
+                            new { axis = "horizontal", lineIndex = 4 },
+                            new { axis = "diagR",      lineIndex = 1 },
+                        },
+                    }),
+                },
+                new LevelEntity
+                {
+                    Id = "hex-003", GameId = "minzzle-swipes-hex", Name = "Hex Challenge",
+                    Difficulty = 3, SchemaVersion = 1, MoveLen = 8,
+                    NodesJson = "[]", EdgesJson = "[]",
+                    BoardJson = JsonSerializer.Serialize(new
+                    {
+                        side = 3,
+                        colors = new[] { "#3b82f6", "#eab308", "#22c55e", "#ef4444", "#a855f7", "#f97316" },
+                        scrambleMoves = new object[]
+                        {
+                            new { axis = "horizontal", lineIndex = 0 },
+                            new { axis = "diagL",      lineIndex = 3 },
+                            new { axis = "diagR",      lineIndex = 2 },
+                            new { axis = "horizontal", lineIndex = 3 },
+                            new { axis = "diagL",      lineIndex = 0 },
+                            new { axis = "diagR",      lineIndex = 4 },
+                            new { axis = "horizontal", lineIndex = 1 },
+                            new { axis = "diagL",      lineIndex = 2 },
+                        },
                     }),
                 }
             );

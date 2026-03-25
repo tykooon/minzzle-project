@@ -44,6 +44,13 @@ export interface LevelSummary {
   hasSolution: boolean;
 }
 
+export interface GameSummary {
+  id: string;
+  name: string;
+  description: string;
+  levelCount: number;
+}
+
 export interface LevelFull {
   id: string;
   name: string;
@@ -53,6 +60,7 @@ export interface LevelFull {
   nodes: { id: number; x: number; y: number }[];
   edges: { id: number; a: number; b: number }[];
   solutionJson: string | null;
+  boardJson: string | null;
 }
 
 export interface SaveSolutionRequest {
@@ -71,6 +79,9 @@ export interface SaveLevelRequest {
 // ── API calls ────────────────────────────────────────────────────────
 
 export const api = {
+  getGames: (): Promise<GameSummary[]> =>
+    get('/api/games'),
+
   getLevels: (gameId: string): Promise<LevelSummary[]> =>
     get(`/api/games/${gameId}/levels`),
 

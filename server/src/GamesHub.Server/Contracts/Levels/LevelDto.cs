@@ -11,5 +11,6 @@ public record LevelDto(
     int MoveLen,
     NodeDto[] Nodes,
     EdgeDto[] Edges,
-    string? SolutionJson
+    string? SolutionJson,
+    string? BoardJson
 );
