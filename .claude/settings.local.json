@@ -16,7 +16,9 @@
       "Read(//c/Repos/pixel-perfect/src/games/fillby5/engine/**)",
       "Read(//c/Repos/pixel-perfect/src/games/fillby5/render/**)",
       "Read(//c/Repos/pixel-perfect/src/games/fillby5/levels/**)",
-      "Read(//c/Repos/pixel-perfect/src/**)"
+      "Read(//c/Repos/pixel-perfect/src/**)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"getBoundingClientRect\\\\|clientX\\\\|clientY\\\\|canvas.width\\\\|canvas.height\" /c/Repos/minzzle-project/web/src/pages/MinzzleSwipes* --include=\"*.tsx\" -A 2 -B 2)"
     ]
   }
 }

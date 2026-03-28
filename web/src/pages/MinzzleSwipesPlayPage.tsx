@@ -26,23 +26,9 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
   const vtRef = useRef<SwipesViewTransform>({ offsetX: 0, offsetY: 0, cellSize: 60 });
   const [state, dispatch] = useReducer(swipesReducer, levelData, createSwipesInitialState);
   const dragStart = useRef<{ x: number; y: number; cell: [number, number] } | null>(null);
+  const drawRef = useRef<() => void>(() => {});
 
-  const updateFit = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * devicePixelRatio;
-    canvas.height = rect.height * devicePixelRatio;
-    vtRef.current = computeSwipesFit(levelData.board.rows, levelData.board.cols, rect.width, rect.height);
-  }, [levelData]);
-
-  useEffect(() => {
-    updateFit();
-    window.addEventListener('resize', updateFit);
-    return () => window.removeEventListener('resize', updateFit);
-  }, [updateFit]);
-
-  useEffect(() => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -53,6 +39,25 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
     renderSwipes(ctx, state, vtRef.current, rect.width, rect.height);
     ctx.restore();
   }, [state]);
+
+  useEffect(() => { drawRef.current = draw; }, [draw]);
+  useEffect(() => { draw(); }, [draw]);
+
+  const updateFit = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * devicePixelRatio;
+    canvas.height = rect.height * devicePixelRatio;
+    vtRef.current = computeSwipesFit(levelData.board.rows, levelData.board.cols, rect.width, rect.height);
+    drawRef.current();
+  }, [levelData]);
+
+  useEffect(() => {
+    updateFit();
+    window.addEventListener('resize', updateFit);
+    return () => window.removeEventListener('resize', updateFit);
+  }, [updateFit]);
 
   const getCanvasPos = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;

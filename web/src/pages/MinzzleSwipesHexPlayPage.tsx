@@ -28,21 +28,7 @@ const HexGame = ({ levelData }: HexGameProps) => {
   const [state, dispatch] = useReducer(hexReducer, levelData, createHexInitialState);
   const dragStart = useRef<{ x: number; y: number; cellId: number } | null>(null);
   const animRef = useRef<number | null>(null);
-
-  const updateFit = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * devicePixelRatio;
-    canvas.height = rect.height * devicePixelRatio;
-    vtRef.current = computeHexFit(levelData.side, rect.width, rect.height);
-  }, [levelData]);
-
-  useEffect(() => {
-    updateFit();
-    window.addEventListener('resize', updateFit);
-    return () => window.removeEventListener('resize', updateFit);
-  }, [updateFit]);
+  const drawRef = useRef<() => void>(() => {});
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -56,7 +42,24 @@ const HexGame = ({ levelData }: HexGameProps) => {
     ctx.restore();
   }, [state]);
 
+  useEffect(() => { drawRef.current = draw; }, [draw]);
   useEffect(() => { draw(); }, [draw]);
+
+  const updateFit = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * devicePixelRatio;
+    canvas.height = rect.height * devicePixelRatio;
+    vtRef.current = computeHexFit(levelData.side, rect.width, rect.height);
+    drawRef.current();
+  }, [levelData]);
+
+  useEffect(() => {
+    updateFit();
+    window.addEventListener('resize', updateFit);
+    return () => window.removeEventListener('resize', updateFit);
+  }, [updateFit]);
 
   const flashLine = useCallback((axis: 'horizontal' | 'diagL' | 'diagR', lineIndex: number) => {
     dispatch({ type: 'HIGHLIGHT', line: { axis, lineIndex } });
