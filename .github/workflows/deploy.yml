@@ -42,12 +42,13 @@ jobs:
       - run: cd web && npm ci && npm run build
 
       # ── Set up SSH ────────────────────────────────────────────────
+      # Note: ssh-keyscan is intentionally omitted — all ssh/rsync calls
+      # below use StrictHostKeyChecking=no, so known_hosts is not consulted.
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
       # ── Test SSH connection ───────────────────────────────────────
       - name: Test SSH
