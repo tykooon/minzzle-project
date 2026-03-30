@@ -137,7 +137,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "swipes-001",
-                            BoardJson = "{\"rows\":4,\"cols\":4,\"solved\":[[\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\"],[\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\"],[\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\"],[\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":1},{\"type\":\"col\",\"index\":2}]}",
+                            BoardJson = "{\"rows\":4,\"cols\":4,\"solved\":[[\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\"],[\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\"],[\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\"],[\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":1},{\"type\":\"col\",\"index\":2}]}",
                             Difficulty = 1,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes",
@@ -149,7 +149,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "swipes-002",
-                            BoardJson = "{\"rows\":6,\"cols\":6,\"solved\":[[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":1},{\"type\":\"col\",\"index\":4},{\"type\":\"row\",\"index\":3},{\"type\":\"col\",\"index\":0},{\"type\":\"row\",\"index\":5}]}",
+                            BoardJson = "{\"rows\":6,\"cols\":6,\"solved\":[[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":1},{\"type\":\"col\",\"index\":4},{\"type\":\"row\",\"index\":3},{\"type\":\"col\",\"index\":0},{\"type\":\"row\",\"index\":5}]}",
                             Difficulty = 2,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes",
@@ -161,7 +161,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "swipes-003",
-                            BoardJson = "{\"rows\":6,\"cols\":6,\"solved\":[[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#1255C8\",\"#1255C8\",\"#1255C8\",\"#FFD500\",\"#FFD500\",\"#FFD500\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"],[\"#C8102E\",\"#C8102E\",\"#C8102E\",\"#00873A\",\"#00873A\",\"#00873A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":0},{\"type\":\"col\",\"index\":2},{\"type\":\"row\",\"index\":4},{\"type\":\"col\",\"index\":5},{\"type\":\"row\",\"index\":2},{\"type\":\"col\",\"index\":1},{\"type\":\"row\",\"index\":3},{\"type\":\"col\",\"index\":3}]}",
+                            BoardJson = "{\"rows\":6,\"cols\":6,\"solved\":[[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#2D63D9\",\"#2D63D9\",\"#2D63D9\",\"#D9B300\",\"#D9B300\",\"#D9B300\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"],[\"#D92B2F\",\"#D92B2F\",\"#D92B2F\",\"#27A84A\",\"#27A84A\",\"#27A84A\"]],\"scrambleMoves\":[{\"type\":\"row\",\"index\":0},{\"type\":\"col\",\"index\":2},{\"type\":\"row\",\"index\":4},{\"type\":\"col\",\"index\":5},{\"type\":\"row\",\"index\":2},{\"type\":\"col\",\"index\":1},{\"type\":\"row\",\"index\":3},{\"type\":\"col\",\"index\":3}]}",
                             Difficulty = 3,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes",
@@ -173,7 +173,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "hex-001",
-                            BoardJson = "{\"side\":2,\"colors\":[\"#1255C8\",\"#FFD500\",\"#00873A\",\"#C8102E\",\"#FF5800\",\"#FFFFFF\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":1},{\"axis\":\"diagL\",\"lineIndex\":2},{\"axis\":\"diagR\",\"lineIndex\":0}]}",
+                            BoardJson = "{\"side\":2,\"colors\":[\"#2D63D9\",\"#D9B300\",\"#27A84A\",\"#D92B2F\",\"#F08A12\",\"#E9EDF5\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":1},{\"axis\":\"diagL\",\"lineIndex\":2},{\"axis\":\"diagR\",\"lineIndex\":0}]}",
                             Difficulty = 1,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes-hex",
@@ -185,7 +185,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "hex-002",
-                            BoardJson = "{\"side\":3,\"colors\":[\"#1255C8\",\"#FFD500\",\"#00873A\",\"#C8102E\",\"#FF5800\",\"#FFFFFF\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":2},{\"axis\":\"diagR\",\"lineIndex\":3},{\"axis\":\"diagL\",\"lineIndex\":1},{\"axis\":\"horizontal\",\"lineIndex\":4},{\"axis\":\"diagR\",\"lineIndex\":1}]}",
+                            BoardJson = "{\"side\":3,\"colors\":[\"#2D63D9\",\"#D9B300\",\"#27A84A\",\"#D92B2F\",\"#F08A12\",\"#E9EDF5\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":2},{\"axis\":\"diagR\",\"lineIndex\":3},{\"axis\":\"diagL\",\"lineIndex\":1},{\"axis\":\"horizontal\",\"lineIndex\":4},{\"axis\":\"diagR\",\"lineIndex\":1}]}",
                             Difficulty = 2,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes-hex",
@@ -197,7 +197,7 @@ namespace GamesHub.Server.Migrations
                         new
                         {
                             Id = "hex-003",
-                            BoardJson = "{\"side\":3,\"colors\":[\"#1255C8\",\"#FFD500\",\"#00873A\",\"#C8102E\",\"#FF5800\",\"#FFFFFF\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":0},{\"axis\":\"diagL\",\"lineIndex\":3},{\"axis\":\"diagR\",\"lineIndex\":2},{\"axis\":\"horizontal\",\"lineIndex\":3},{\"axis\":\"diagL\",\"lineIndex\":0},{\"axis\":\"diagR\",\"lineIndex\":4},{\"axis\":\"horizontal\",\"lineIndex\":1},{\"axis\":\"diagL\",\"lineIndex\":2}]}",
+                            BoardJson = "{\"side\":3,\"colors\":[\"#2D63D9\",\"#D9B300\",\"#27A84A\",\"#D92B2F\",\"#F08A12\",\"#E9EDF5\"],\"scrambleMoves\":[{\"axis\":\"horizontal\",\"lineIndex\":0},{\"axis\":\"diagL\",\"lineIndex\":3},{\"axis\":\"diagR\",\"lineIndex\":2},{\"axis\":\"horizontal\",\"lineIndex\":3},{\"axis\":\"diagL\",\"lineIndex\":0},{\"axis\":\"diagR\",\"lineIndex\":4},{\"axis\":\"horizontal\",\"lineIndex\":1},{\"axis\":\"diagL\",\"lineIndex\":2}]}",
                             Difficulty = 3,
                             EdgesJson = "[]",
                             GameId = "minzzle-swipes-hex",

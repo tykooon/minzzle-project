@@ -127,10 +127,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                         rows = 4, cols = 4,
                         solved = new[]
                         {
-                            new[] { "#1255C8", "#1255C8", "#FFD500", "#FFD500" },
-                            new[] { "#1255C8", "#1255C8", "#FFD500", "#FFD500" },
-                            new[] { "#C8102E", "#C8102E", "#00873A", "#00873A" },
-                            new[] { "#C8102E", "#C8102E", "#00873A", "#00873A" },
+                            new[] { "#2D63D9", "#2D63D9", "#D9B300", "#D9B300" },
+                            new[] { "#2D63D9", "#2D63D9", "#D9B300", "#D9B300" },
+                            new[] { "#D92B2F", "#D92B2F", "#27A84A", "#27A84A" },
+                            new[] { "#D92B2F", "#D92B2F", "#27A84A", "#27A84A" },
                         },
                         scrambleMoves = new object[]
                         {
@@ -149,12 +149,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                         rows = 6, cols = 6,
                         solved = new[]
                         {
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
                         },
                         scrambleMoves = new object[]
                         {
@@ -176,12 +176,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                         rows = 6, cols = 6,
                         solved = new[]
                         {
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#1255C8", "#1255C8", "#1255C8", "#FFD500", "#FFD500", "#FFD500" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
-                            new[] { "#C8102E", "#C8102E", "#C8102E", "#00873A", "#00873A", "#00873A" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#2D63D9", "#2D63D9", "#2D63D9", "#D9B300", "#D9B300", "#D9B300" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
+                            new[] { "#D92B2F", "#D92B2F", "#D92B2F", "#27A84A", "#27A84A", "#27A84A" },
                         },
                         scrambleMoves = new object[]
                         {
@@ -205,7 +205,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                     BoardJson = JsonSerializer.Serialize(new
                     {
                         side = 2,
-                        colors = new[] { "#1255C8", "#FFD500", "#00873A", "#C8102E", "#FF5800", "#FFFFFF" },
+                        colors = new[] { "#2D63D9", "#D9B300", "#27A84A", "#D92B2F", "#F08A12", "#E9EDF5" },
                         scrambleMoves = new object[]
                         {
                             new { axis = "horizontal", lineIndex = 1 },
@@ -222,7 +222,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                     BoardJson = JsonSerializer.Serialize(new
                     {
                         side = 3,
-                        colors = new[] { "#1255C8", "#FFD500", "#00873A", "#C8102E", "#FF5800", "#FFFFFF" },
+                        colors = new[] { "#2D63D9", "#D9B300", "#27A84A", "#D92B2F", "#F08A12", "#E9EDF5" },
                         scrambleMoves = new object[]
                         {
                             new { axis = "horizontal", lineIndex = 2 },
@@ -241,7 +241,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                     BoardJson = JsonSerializer.Serialize(new
                     {
                         side = 3,
-                        colors = new[] { "#1255C8", "#FFD500", "#00873A", "#C8102E", "#FF5800", "#FFFFFF" },
+                        colors = new[] { "#2D63D9", "#D9B300", "#27A84A", "#D92B2F", "#F08A12", "#E9EDF5" },
                         scrambleMoves = new object[]
                         {
                             new { axis = "horizontal", lineIndex = 0 },

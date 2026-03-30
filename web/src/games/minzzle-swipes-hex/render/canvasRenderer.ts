@@ -1,15 +1,14 @@
 import { HexGameState, HexBoardData } from '../engine/types';
 
-const BG = '#0d1117';
+const BG = '#070b12';
 const SQRT3 = Math.sqrt(3);
 
-const CELL_SCALE = 0.90;
-const CORNER_RADIUS = 4;
+const CELL_SCALE = 0.88;
+const CORNER_RADIUS = 6;
 
-// Home indicators: colored line segments drawn just outside the hex boundary
 const HOME_LINE_WIDTH = 5;
-const HOME_LINE_OFFSET = 7;   // pixels outward from hex edge
-const HOME_LINE_TRIM = 0.10;  // fraction trimmed from each end (gap between edges)
+const HOME_LINE_OFFSET = 7;
+const HOME_LINE_TRIM = 0.10;
 const HOME_LINE_ALPHA = 0.85;
 
 function shrinkCell(
@@ -53,13 +52,15 @@ function drawRoundedTriangle(
 }
 
 /**
- * Draw a triangular tile with the same Rubik's "plastic pillow" look:
- * vignette (edge darkening) + directional light + specular glare.
+ * Convex dome triangle tile.
+ * isUp: apex at top — glare spot in lower-centre (wide base catches light).
+ * !isUp: apex at bottom — glare spot in upper-centre (wide base at top).
  */
 function drawTriTile3D(
   ctx: CanvasRenderingContext2D,
   shrunk: [number, number][],
-  color: string
+  color: string,
+  isUp: boolean
 ) {
   const xs = shrunk.map(v => v[0]);
   const ys = shrunk.map(v => v[1]);
@@ -67,44 +68,85 @@ function drawTriTile3D(
   const minY = Math.min(...ys), maxY = Math.max(...ys);
   const tw = maxX - minX;
   const th = maxY - minY;
-  const tcx = minX + tw / 2;
-  const tcy = minY + th / 2;
+  const cx = minX + tw * 0.5;
 
   ctx.save();
   drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
   ctx.clip();
 
-  // 1. Base color
+  // 1. Flat base
   ctx.fillStyle = color;
   ctx.fillRect(minX, minY, tw, th);
 
-  // 2. Pillow vignette — radial, edge darkening
-  const diagonal = Math.sqrt(tw * tw + th * th) / 2;
-  const vignette = ctx.createRadialGradient(tcx, tcy, diagonal * 0.20, tcx, tcy, diagonal * 0.95);
-  vignette.addColorStop(0,   'rgba(0,0,0,0)');
-  vignette.addColorStop(0.65,'rgba(0,0,0,0)');
-  vignette.addColorStop(1,   'rgba(0,0,0,0.42)');
-  ctx.fillStyle = vignette;
+  // 2. Edge shadow at the apex edge (narrow end gets deeper shadow)
+  const shadowY = isUp ? minY : maxY;
+  const shadowDir = isUp ? 1 : -1;
+  const apexShadow = ctx.createLinearGradient(minX, shadowY, minX, shadowY + shadowDir * th * 0.30);
+  apexShadow.addColorStop(0,   'rgba(0,0,0,0.32)');
+  apexShadow.addColorStop(0.5, 'rgba(0,0,0,0.10)');
+  apexShadow.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = apexShadow;
   ctx.fillRect(minX, minY, tw, th);
 
-  // 3. Directional light: top-left → bottom-right
-  const dirLight = ctx.createLinearGradient(minX, minY, maxX, maxY);
-  dirLight.addColorStop(0,    'rgba(255,255,255,0.22)');
-  dirLight.addColorStop(0.45, 'rgba(255,255,255,0)');
-  dirLight.addColorStop(1,    'rgba(0,0,0,0.18)');
-  ctx.fillStyle = dirLight;
-  ctx.fillRect(minX, minY, tw, th);
-
-  // 4. Specular glare
-  const gx = minX + tw * 0.30;
-  const gy = minY + th * 0.22;
-  const gr = Math.min(tw, th) * 0.38;
-  const glare = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-  glare.addColorStop(0,    'rgba(255,255,255,0.55)');
-  glare.addColorStop(0.35, 'rgba(255,255,255,0.15)');
+  // 3. Convex dome glare — oval radial highlight
+  //    isUp: glare sits lower-centre over wide base
+  //    !isUp: glare sits upper-centre over wide base
+  const glareY = isUp ? minY + th * 0.55 : minY + th * 0.35;
+  const glare = ctx.createRadialGradient(
+    cx, glareY, 0,
+    cx, glareY, tw * 0.62
+  );
+  glare.addColorStop(0,    'rgba(255,255,255,0.52)');
+  glare.addColorStop(0.25, 'rgba(255,255,255,0.28)');
+  glare.addColorStop(0.55, 'rgba(255,255,255,0.07)');
+  glare.addColorStop(0.80, 'rgba(255,255,255,0.01)');
   glare.addColorStop(1,    'rgba(255,255,255,0)');
   ctx.fillStyle = glare;
   ctx.fillRect(minX, minY, tw, th);
+
+  ctx.restore();
+}
+
+function drawHexHomeIndicators(
+  ctx: CanvasRenderingContext2D,
+  side: number,
+  colors: string[],
+  vt: HexViewTransform
+) {
+  ctx.save();
+  ctx.globalAlpha = HOME_LINE_ALPHA;
+  ctx.lineWidth = HOME_LINE_WIDTH;
+  ctx.lineCap = 'round';
+
+  for (let i = 0; i < 6; i++) {
+    const angleA = (i * 60) * Math.PI / 180;
+    const angleB = ((i + 1) * 60) * Math.PI / 180;
+
+    const wA: [number, number] = [side * Math.cos(angleA), side * Math.sin(angleA)];
+    const wB: [number, number] = [side * Math.cos(angleB), side * Math.sin(angleB)];
+
+    const midAngle = (i * 60 + 30) * Math.PI / 180;
+    const normalX =  Math.cos(midAngle);
+    const normalY = -Math.sin(midAngle);
+
+    const sA = toScreen(wA[0], wA[1], vt);
+    const sB = toScreen(wB[0], wB[1], vt);
+
+    const trim = HOME_LINE_TRIM;
+    const pAx = sA[0] + (sB[0] - sA[0]) * trim;
+    const pAy = sA[1] + (sB[1] - sA[1]) * trim;
+    const pBx = sA[0] + (sB[0] - sA[0]) * (1 - trim);
+    const pBy = sA[1] + (sB[1] - sA[1]) * (1 - trim);
+
+    const ox = normalX * HOME_LINE_OFFSET;
+    const oy = normalY * HOME_LINE_OFFSET;
+
+    ctx.strokeStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(pAx + ox, pAy + oy);
+    ctx.lineTo(pBx + ox, pBy + oy);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -129,60 +171,6 @@ function toScreen(x: number, y: number, vt: HexViewTransform): [number, number] 
   return [x * vt.scale + vt.offsetX, -y * vt.scale + vt.offsetY];
 }
 
-/**
- * Draw colored line segments just outside each of the 6 hex boundary edges.
- * Edge i (from vertex i to vertex i+1) is colored with colors[i],
- * since the sector centered at edge i corresponds to sector i.
- */
-function drawHexHomeIndicators(
-  ctx: CanvasRenderingContext2D,
-  side: number,
-  colors: string[],
-  vt: HexViewTransform
-) {
-  ctx.save();
-  ctx.globalAlpha = HOME_LINE_ALPHA;
-  ctx.lineWidth = HOME_LINE_WIDTH;
-  ctx.lineCap = 'round';
-
-  for (let i = 0; i < 6; i++) {
-    const angleA = (i * 60) * Math.PI / 180;
-    const angleB = ((i + 1) * 60) * Math.PI / 180;
-
-    // Hex vertices in world coords
-    const wA: [number, number] = [side * Math.cos(angleA), side * Math.sin(angleA)];
-    const wB: [number, number] = [side * Math.cos(angleB), side * Math.sin(angleB)];
-
-    // Outward normal direction (from center to edge midpoint)
-    const midAngle = (i * 60 + 30) * Math.PI / 180;
-    const normalX =  Math.cos(midAngle);
-    const normalY = -Math.sin(midAngle); // flip Y for screen coords
-
-    // Screen positions of the two edge endpoints
-    const sA = toScreen(wA[0], wA[1], vt);
-    const sB = toScreen(wB[0], wB[1], vt);
-
-    // Trim ends to create small gaps between adjacent indicators
-    const trim = HOME_LINE_TRIM;
-    const pAx = sA[0] + (sB[0] - sA[0]) * trim;
-    const pAy = sA[1] + (sB[1] - sA[1]) * trim;
-    const pBx = sA[0] + (sB[0] - sA[0]) * (1 - trim);
-    const pBy = sA[1] + (sB[1] - sA[1]) * (1 - trim);
-
-    // Offset outward
-    const ox = normalX * HOME_LINE_OFFSET;
-    const oy = normalY * HOME_LINE_OFFSET;
-
-    ctx.strokeStyle = colors[i];
-    ctx.beginPath();
-    ctx.moveTo(pAx + ox, pAy + oy);
-    ctx.lineTo(pBx + ox, pBy + oy);
-    ctx.stroke();
-  }
-
-  ctx.restore();
-}
-
 export function renderHex(
   ctx: CanvasRenderingContext2D,
   state: HexGameState,
@@ -196,7 +184,6 @@ export function renderHex(
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, canvasW, canvasH);
 
-  // Home indicators — drawn first (behind cells)
   drawHexHomeIndicators(ctx, boardData.side, colors, vt);
 
   for (const cell of boardData.cells) {
@@ -204,22 +191,20 @@ export function renderHex(
     const [cx, cy] = toScreen(cell.centroid[0], cell.centroid[1], vt);
     const shrunk = shrinkCell(verts, cx, cy, CELL_SCALE);
 
-    drawTriTile3D(ctx, shrunk, cellColors[cell.id]);
+    drawTriTile3D(ctx, shrunk, cellColors[cell.id], cell.isUp);
 
-    // Highlight overlay
     if (highlightLine) {
       const lineIdx = boardData.cellToLine[highlightLine.axis]?.get(cell.id);
       if (lineIdx === highlightLine.lineIndex) {
         drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.fillStyle = 'rgba(255,255,255,0.26)';
         ctx.fill();
       }
     }
 
-    // Win shimmer
     if (won) {
       drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';
       ctx.fill();
     }
   }
@@ -238,7 +223,7 @@ export function renderHex(
   ctx.moveTo(hexVerts[0][0], hexVerts[0][1]);
   for (let i = 1; i < 6; i++) ctx.lineTo(hexVerts[i][0], hexVerts[i][1]);
   ctx.closePath();
-  ctx.strokeStyle = won ? 'rgba(118, 255, 3, 0.5)' : 'rgba(0, 229, 255, 0.15)';
+  ctx.strokeStyle = won ? 'rgba(118,255,3,0.5)' : 'rgba(0,229,255,0.12)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 }

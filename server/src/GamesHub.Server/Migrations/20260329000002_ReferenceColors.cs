@@ -5,29 +5,31 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GamesHub.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateTileColors : Migration
+    public partial class ReferenceColors : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Replace Tailwind-based colors with classic Rubik's Cube colors
-            // Shared: blue, yellow, red, green (used in both Swipes and Hex)
+            // Update to final reference CSS palette
+            // Covers all intermediate values from previous migration attempts
             migrationBuilder.Sql(@"
 UPDATE ""Levels""
-SET ""Board"" = replace(replace(replace(replace(""Board"",
-  '#3b82f6', '#1255C8'),
-  '#eab308', '#FFD500'),
-  '#ef4444', '#C8102E'),
-  '#22c55e', '#00873A')
+SET ""Board"" = replace(replace(replace(replace(replace(replace(""Board"",
+  '#C8102E', '#D92B2F'),
+  '#B71234', '#D92B2F'),
+  '#1255C8', '#2D63D9'),
+  '#0046AD', '#2D63D9'),
+  '#FFD500', '#D9B300'),
+  '#00873A', '#27A84A')
 WHERE ""GameId"" IN ('minzzle-swipes', 'minzzle-swipes-hex');
 ");
 
-            // Hex-only: replace purple→orange, orange→white (6th Rubik's face)
+            // Hex-only: orange and white
             migrationBuilder.Sql(@"
 UPDATE ""Levels""
 SET ""Board"" = replace(replace(""Board"",
-  '#a855f7', '#FF5800'),
-  '#f97316', '#FFFFFF')
+  '#FF5800', '#F08A12'),
+  '#FFFFFF', '#E9EDF5')
 WHERE ""GameId"" = 'minzzle-swipes-hex';
 ");
         }
@@ -35,22 +37,21 @@ WHERE ""GameId"" = 'minzzle-swipes-hex';
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Reverse: restore original Tailwind colors
             migrationBuilder.Sql(@"
 UPDATE ""Levels""
 SET ""Board"" = replace(replace(replace(replace(""Board"",
-  '#1255C8', '#3b82f6'),
-  '#FFD500', '#eab308'),
-  '#C8102E', '#ef4444'),
-  '#00873A', '#22c55e')
+  '#D92B2F', '#C8102E'),
+  '#2D63D9', '#1255C8'),
+  '#D9B300', '#FFD500'),
+  '#27A84A', '#00873A')
 WHERE ""GameId"" IN ('minzzle-swipes', 'minzzle-swipes-hex');
 ");
 
             migrationBuilder.Sql(@"
 UPDATE ""Levels""
 SET ""Board"" = replace(replace(""Board"",
-  '#FF5800', '#a855f7'),
-  '#FFFFFF', '#f97316')
+  '#F08A12', '#FF5800'),
+  '#E9EDF5', '#FFFFFF')
 WHERE ""GameId"" = 'minzzle-swipes-hex';
 ");
         }
