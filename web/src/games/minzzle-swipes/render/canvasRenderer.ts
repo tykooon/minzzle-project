@@ -1,5 +1,12 @@
 import { SwipesGameState } from '../engine/types';
 
+export interface SwipesAnimState {
+  lineType: 'row' | 'col';
+  lineIndex: number;
+  angle: number;      // 0 → Math.PI
+  direction: number;  // +1 or -1 (which side comes forward)
+}
+
 const BG = '#070b12';
 const CELL_GAP = 8;
 const BORDER_RADIUS = 14;
@@ -156,12 +163,69 @@ function drawHomeIndicators(
   ctx.restore();
 }
 
+const DEPTH = 0.25;
+
+function buildAnimatedRowTiles(
+  board: SwipesGameState['board'],
+  vt: SwipesViewTransform,
+  anim: SwipesAnimState
+) {
+  const { cols } = board;
+  const cs = vt.cellSize;
+  const gap = CELL_GAP;
+  const rowCenterX = vt.offsetX + (cols * cs) / 2;
+  const rowHalfWidth = (cols * cs) / 2;
+  const row = anim.lineIndex;
+  const y = vt.offsetY + row * cs + gap / 2;
+  const h = cs - gap;
+
+  return board.cells[row].map((color, col) => {
+    const tileCenterX = vt.offsetX + col * cs + cs / 2;
+    const dx = tileCenterX - rowCenterX;
+    const projCenterX = rowCenterX + dx * Math.cos(anim.angle);
+    const z = anim.direction * dx * Math.sin(anim.angle);
+    const scale = 1 + DEPTH * (z / rowHalfWidth);
+    const w = Math.max(1, (cs - gap) * scale);
+    const x = projCenterX - w / 2;
+    const r = Math.max(1, BORDER_RADIUS * scale);
+    return { color, x, y, w, h, r, z };
+  });
+}
+
+function buildAnimatedColTiles(
+  board: SwipesGameState['board'],
+  vt: SwipesViewTransform,
+  anim: SwipesAnimState
+) {
+  const { rows } = board;
+  const cs = vt.cellSize;
+  const gap = CELL_GAP;
+  const colCenterY = vt.offsetY + (rows * cs) / 2;
+  const colHalfHeight = (rows * cs) / 2;
+  const col = anim.lineIndex;
+  const x = vt.offsetX + col * cs + gap / 2;
+  const w = cs - gap;
+
+  return board.cells.map((boardRow, row) => {
+    const tileCenterY = vt.offsetY + row * cs + cs / 2;
+    const dy = tileCenterY - colCenterY;
+    const projCenterY = colCenterY + dy * Math.cos(anim.angle);
+    const z = anim.direction * dy * Math.sin(anim.angle);
+    const scale = 1 + DEPTH * (z / colHalfHeight);
+    const h = Math.max(1, (cs - gap) * scale);
+    const y = projCenterY - h / 2;
+    const r = Math.max(1, BORDER_RADIUS * scale);
+    return { color: boardRow[col], x, y, w, h, r, z };
+  });
+}
+
 export function renderSwipes(
   ctx: CanvasRenderingContext2D,
   state: SwipesGameState,
   vt: SwipesViewTransform,
   canvasW: number,
-  canvasH: number
+  canvasH: number,
+  anim?: SwipesAnimState
 ) {
   const { board, solved, highlightLine, won } = state;
 
@@ -173,8 +237,13 @@ export function renderSwipes(
 
   drawHomeIndicators(ctx, vt, solved, board.rows, board.cols);
 
+  // Draw all static tiles (skip the animated line when anim is active)
   for (let row = 0; row < board.rows; row++) {
     for (let col = 0; col < board.cols; col++) {
+      if (anim) {
+        if (anim.lineType === 'row' && anim.lineIndex === row) continue;
+        if (anim.lineType === 'col' && anim.lineIndex === col) continue;
+      }
       const x = vt.offsetX + col * vt.cellSize + gap / 2;
       const y = vt.offsetY + row * vt.cellSize + gap / 2;
       const w = vt.cellSize - gap;
@@ -197,6 +266,19 @@ export function renderSwipes(
         roundRect(ctx, x, y, w, h, r);
         ctx.fill();
       }
+    }
+  }
+
+  // Draw animated line tiles sorted back-to-front
+  if (anim) {
+    const tiles =
+      anim.lineType === 'row'
+        ? buildAnimatedRowTiles(board, vt, anim)
+        : buildAnimatedColTiles(board, vt, anim);
+
+    tiles.sort((a, b) => a.z - b.z); // back-to-front
+    for (const t of tiles) {
+      drawTile3D(ctx, t.x, t.y, t.w, t.h, t.r, t.color);
     }
   }
 

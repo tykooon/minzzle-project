@@ -1,4 +1,13 @@
-import { HexGameState, HexBoardData } from '../engine/types';
+import { HexGameState, HexBoardData, HexCell } from '../engine/types';
+
+export interface HexAnimState {
+  axis: 'horizontal' | 'diagL' | 'diagR';
+  lineIndex: number;
+  angle: number;      // 0 → Math.PI
+  direction: number;  // +1 or -1
+}
+
+const DEPTH = 0.25;
 
 const BG = '#070b12';
 const SQRT3 = Math.sqrt(3);
@@ -171,13 +180,74 @@ function toScreen(x: number, y: number, vt: HexViewTransform): [number, number] 
   return [x * vt.scale + vt.offsetX, -y * vt.scale + vt.offsetY];
 }
 
+interface AnimCellData {
+  cell: HexCell;
+  screenVerts: [number, number][];
+  cx: number;
+  cy: number;
+  z: number;
+}
+
+function buildAnimLineData(
+  boardData: HexBoardData,
+  anim: HexAnimState,
+  vt: HexViewTransform
+): AnimCellData[] | null {
+  const line = boardData.lines.find(l => l.axis === anim.axis && l.index === anim.lineIndex);
+  if (!line || line.cellIds.length === 0) return null;
+
+  const cells = line.cellIds.map(id => boardData.cells.find(c => c.id === id)!).filter(Boolean);
+
+  // Screen centroids
+  const sCentroids = cells.map(c => toScreen(c.centroid[0], c.centroid[1], vt));
+
+  // Line center
+  const lineCX = sCentroids.reduce((s, p) => s + p[0], 0) / sCentroids.length;
+  const lineCY = sCentroids.reduce((s, p) => s + p[1], 0) / sCentroids.length;
+
+  // Axis direction: vector from first to last centroid, normalised
+  const first = sCentroids[0];
+  const last = sCentroids[sCentroids.length - 1];
+  const axLen = Math.sqrt((last[0] - first[0]) ** 2 + (last[1] - first[1]) ** 2);
+  const axDir: [number, number] = axLen > 1
+    ? [(last[0] - first[0]) / axLen, (last[1] - first[1]) / axLen]
+    : [1, 0];
+
+  // Each cell's offset ALONG the axis (same as Swipes dx/dy along row/col direction)
+  const lineOffsets = sCentroids.map(([cx, cy]) =>
+    (cx - lineCX) * axDir[0] + (cy - lineCY) * axDir[1]
+  );
+  const maxOffset = Math.max(...lineOffsets.map(Math.abs), 1);
+
+  return cells.map((cell, i) => {
+    const [cx, cy] = sCentroids[i];
+    const lineOffset = lineOffsets[i];
+    // Tiles arc along the line direction (rotate around axis perpendicular to the line)
+    const projOffset = lineOffset * Math.cos(anim.angle);
+    const z = anim.direction * lineOffset * Math.sin(anim.angle);
+    const scale = 1 + DEPTH * (z / maxOffset);
+    // Shift is along the line axis direction
+    const shiftX = (projOffset - lineOffset) * axDir[0];
+    const shiftY = (projOffset - lineOffset) * axDir[1];
+
+    const screenVerts = cell.vertices.map(([vx, vy]) => {
+      const [sx, sy] = toScreen(vx, vy, vt);
+      const newCx = cx + shiftX;
+      const newCy = cy + shiftY;
+      return [newCx + (sx - cx) * scale, newCy + (sy - cy) * scale] as [number, number];
+    });
+
+    return { cell, screenVerts, cx: cx + shiftX, cy: cy + shiftY, z };
+  });
+}
+
 export function renderHex(
   ctx: CanvasRenderingContext2D,
   state: HexGameState,
   vt: HexViewTransform,
   canvasW: number,
   canvasH: number,
-  animProgress?: { lineAxis: string; lineIndex: number; t: number }
+  anim?: HexAnimState
 ) {
   const { boardData, cellColors, colors, highlightLine, won } = state;
 
@@ -186,7 +256,14 @@ export function renderHex(
 
   drawHexHomeIndicators(ctx, boardData.side, colors, vt);
 
+  // Build animated line data upfront (null when no animation)
+  const animLineData = anim ? buildAnimLineData(boardData, anim, vt) : null;
+  const animCellIds = animLineData ? new Set(animLineData.map(d => d.cell.id)) : null;
+
+  // Draw static cells (skip animated line)
   for (const cell of boardData.cells) {
+    if (animCellIds?.has(cell.id)) continue;
+
     const verts = cell.vertices.map(([x, y]) => toScreen(x, y, vt));
     const [cx, cy] = toScreen(cell.centroid[0], cell.centroid[1], vt);
     const shrunk = shrinkCell(verts, cx, cy, CELL_SCALE);
@@ -206,6 +283,15 @@ export function renderHex(
       drawRoundedTriangle(ctx, shrunk, CORNER_RADIUS);
       ctx.fillStyle = 'rgba(255,255,255,0.14)';
       ctx.fill();
+    }
+  }
+
+  // Draw animated line cells sorted back-to-front
+  if (animLineData) {
+    const sorted = [...animLineData].sort((a, b) => a.z - b.z);
+    for (const { cell, screenVerts, cx, cy } of sorted) {
+      const shrunk = shrinkCell(screenVerts, cx, cy, CELL_SCALE);
+      drawTriTile3D(ctx, shrunk, cellColors[cell.id], cell.isUp);
     }
   }
 

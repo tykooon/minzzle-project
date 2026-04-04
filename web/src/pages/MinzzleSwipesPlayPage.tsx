@@ -7,6 +7,7 @@ import {
   computeSwipesFit,
   hitTestCell,
   SwipesViewTransform,
+  SwipesAnimState,
 } from '@/games/minzzle-swipes/render/canvasRenderer';
 import type { SwipesLevelData, SwipesMove, ColorId } from '@/games/minzzle-swipes/engine/types';
 
@@ -19,15 +20,26 @@ interface SwipesGameProps {
   levelData: SwipesLevelData;
 }
 
+type AnimPhase = 'gesture' | 'completing' | 'reverting';
+type ActiveAnim = SwipesAnimState & { phase: AnimPhase };
+
+const ANIM_STEP = Math.PI / 18; // ~300 ms at 60 fps to complete
+
 const SwipesGame = ({ levelData }: SwipesGameProps) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const vtRef = useRef<SwipesViewTransform>({ offsetX: 0, offsetY: 0, cellSize: 60 });
   const [state, dispatch] = useReducer(swipesReducer, levelData, createSwipesInitialState);
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
   const dragStart = useRef<{ x: number; y: number; cell: [number, number] } | null>(null);
+  const animRef = useRef<ActiveAnim | null>(null);
+  const rafRef = useRef<number | null>(null);
   const drawRef = useRef<() => void>(() => {});
 
-  const draw = useCallback(() => {
+  // ── Low-level frame render (reads animRef, stateRef, vtRef) ──────────────
+  const renderFrame = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -35,9 +47,51 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
     const rect = canvas.getBoundingClientRect();
     ctx.save();
     ctx.scale(devicePixelRatio, devicePixelRatio);
-    renderSwipes(ctx, state, vtRef.current, rect.width, rect.height);
+    renderSwipes(ctx, stateRef.current, vtRef.current, rect.width, rect.height, animRef.current ?? undefined);
     ctx.restore();
-  }, [state]);
+  }, []);
+
+  // ── rAF loop ─────────────────────────────────────────────────────────────
+  const runAnimFrame = useCallback(() => {
+    const anim = animRef.current;
+    if (!anim) return;
+
+    if (anim.phase === 'completing') {
+      anim.angle = Math.min(anim.angle + ANIM_STEP, Math.PI);
+      renderFrame();
+      if (anim.angle >= Math.PI) {
+        // Commit the move
+        dispatch({ type: 'SWIPE', move: { type: anim.lineType, index: anim.lineIndex } });
+        animRef.current = null;
+        rafRef.current = null;
+        return;
+      }
+    } else if (anim.phase === 'reverting') {
+      anim.angle = Math.max(anim.angle - ANIM_STEP, 0);
+      renderFrame();
+      if (anim.angle <= 0) {
+        animRef.current = null;
+        rafRef.current = null;
+        return;
+      }
+    } else {
+      // gesture phase: just render current angle
+      renderFrame();
+    }
+
+    rafRef.current = requestAnimationFrame(runAnimFrame);
+  }, [renderFrame]);
+
+  const startRaf = useCallback(() => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(runAnimFrame);
+  }, [runAnimFrame]);
+
+  // ── State-driven render (for non-animated redraws: undo, reset, win) ─────
+  const draw = useCallback(() => {
+    if (animRef.current) return; // rAF loop owns rendering during animation
+    renderFrame();
+  }, [renderFrame]);
 
   useEffect(() => { drawRef.current = draw; }, [draw]);
   useEffect(() => { draw(); }, [draw]);
@@ -55,7 +109,10 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
   useEffect(() => {
     updateFit();
     window.addEventListener('resize', updateFit);
-    return () => window.removeEventListener('resize', updateFit);
+    return () => {
+      window.removeEventListener('resize', updateFit);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
   }, [updateFit]);
 
   const getCanvasPos = (e: React.MouseEvent | React.TouchEvent) => {
@@ -68,25 +125,34 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (animRef.current?.phase === 'completing') return; // let current flip finish
     const pos = getCanvasPos(e);
     if (!pos) return;
-    const cell = hitTestCell(vtRef.current, state.board.rows, state.board.cols, pos.x, pos.y);
-    if (cell) dragStart.current = { x: pos.x, y: pos.y, cell };
+    const cell = hitTestCell(vtRef.current, stateRef.current.board.rows, stateRef.current.board.cols, pos.x, pos.y);
+    if (!cell) return;
+    dragStart.current = { x: pos.x, y: pos.y, cell };
+    // Init anim at angle=0 but don't start rAF yet — wait until direction is known
+    animRef.current = { lineType: 'row', lineIndex: cell[0], angle: 0, direction: 1, phase: 'gesture' };
   };
 
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragStart.current) return;
+    if (!dragStart.current || !animRef.current) return;
     const pos = getCanvasPos(e);
     if (!pos) return;
     const dx = pos.x - dragStart.current.x;
     const dy = pos.y - dragStart.current.y;
-    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
-      if (Math.abs(dx) > Math.abs(dy)) {
-        dispatch({ type: 'HIGHLIGHT', line: { type: 'row', index: dragStart.current.cell[0] } });
-      } else {
-        dispatch({ type: 'HIGHLIGHT', line: { type: 'col', index: dragStart.current.cell[1] } });
-      }
-    }
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 2) return;
+
+    // Determine line & direction from drag vector
+    const isRow = Math.abs(dx) >= Math.abs(dy);
+    const lineType: 'row' | 'col' = isRow ? 'row' : 'col';
+    const lineIndex = isRow ? dragStart.current.cell[0] : dragStart.current.cell[1];
+    const direction = isRow ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
+    const angle = Math.min(dist * Math.PI / 120, Math.PI * 0.85);
+
+    animRef.current = { lineType, lineIndex, angle, direction, phase: 'gesture' };
+    startRaf();
   };
 
   const handlePointerUp = (e: React.MouseEvent | React.TouchEvent) => {
@@ -104,15 +170,17 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
     }
     const dx = endX - dragStart.current.x;
     const dy = endY - dragStart.current.y;
-    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
-      if (Math.abs(dx) > Math.abs(dy)) {
-        dispatch({ type: 'SWIPE', move: { type: 'row', index: dragStart.current.cell[0] } });
-      } else {
-        dispatch({ type: 'SWIPE', move: { type: 'col', index: dragStart.current.cell[1] } });
-      }
-    }
-    dispatch({ type: 'HIGHLIGHT', line: null });
     dragStart.current = null;
+
+    const anim = animRef.current;
+    if (!anim) return;
+
+    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
+      anim.phase = 'completing';
+    } else {
+      anim.phase = 'reverting';
+    }
+    startRaf();
   };
 
   return (

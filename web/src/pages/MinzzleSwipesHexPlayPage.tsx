@@ -9,6 +9,7 @@ import {
   hitTestHexCell,
   snapToAxis,
   HexViewTransform,
+  HexAnimState,
 } from '@/games/minzzle-swipes-hex/render/canvasRenderer';
 import type { HexLevelData } from '@/games/minzzle-swipes-hex/engine/types';
 
@@ -21,16 +22,26 @@ interface HexGameProps {
   levelData: HexLevelData;
 }
 
+type HexAnimPhase = 'gesture' | 'completing' | 'reverting';
+type ActiveHexAnim = HexAnimState & { phase: HexAnimPhase };
+
+const HEX_ANIM_STEP = Math.PI / 18;
+
 const HexGame = ({ levelData }: HexGameProps) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const vtRef = useRef<HexViewTransform>({ offsetX: 0, offsetY: 0, scale: 80 });
   const [state, dispatch] = useReducer(hexReducer, levelData, createHexInitialState);
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
   const dragStart = useRef<{ x: number; y: number; cellId: number } | null>(null);
-  const animRef = useRef<number | null>(null);
+  const hexAnimRef = useRef<ActiveHexAnim | null>(null);
+  const rafRef = useRef<number | null>(null);
   const drawRef = useRef<() => void>(() => {});
 
-  const draw = useCallback(() => {
+  // ── Low-level frame render ────────────────────────────────────────────────
+  const renderFrame = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -38,9 +49,49 @@ const HexGame = ({ levelData }: HexGameProps) => {
     const rect = canvas.getBoundingClientRect();
     ctx.save();
     ctx.scale(devicePixelRatio, devicePixelRatio);
-    renderHex(ctx, state, vtRef.current, rect.width, rect.height);
+    renderHex(ctx, stateRef.current, vtRef.current, rect.width, rect.height, hexAnimRef.current ?? undefined);
     ctx.restore();
-  }, [state]);
+  }, []);
+
+  // ── rAF loop ─────────────────────────────────────────────────────────────
+  const runAnimFrame = useCallback(() => {
+    const anim = hexAnimRef.current;
+    if (!anim) return;
+
+    if (anim.phase === 'completing') {
+      anim.angle = Math.min(anim.angle + HEX_ANIM_STEP, Math.PI);
+      renderFrame();
+      if (anim.angle >= Math.PI) {
+        dispatch({ type: 'SWIPE', move: { axis: anim.axis, lineIndex: anim.lineIndex } });
+        hexAnimRef.current = null;
+        rafRef.current = null;
+        return;
+      }
+    } else if (anim.phase === 'reverting') {
+      anim.angle = Math.max(anim.angle - HEX_ANIM_STEP, 0);
+      renderFrame();
+      if (anim.angle <= 0) {
+        hexAnimRef.current = null;
+        rafRef.current = null;
+        return;
+      }
+    } else {
+      renderFrame();
+    }
+
+    rafRef.current = requestAnimationFrame(runAnimFrame);
+  }, [renderFrame]);
+
+  const startRaf = useCallback(() => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(runAnimFrame);
+  }, [runAnimFrame]);
+
+  // ── State-driven render (for undo, reset, win) ────────────────────────────
+  const draw = useCallback(() => {
+    if (hexAnimRef.current) return;
+    renderFrame();
+  }, [renderFrame]);
 
   useEffect(() => { drawRef.current = draw; }, [draw]);
   useEffect(() => { draw(); }, [draw]);
@@ -58,22 +109,11 @@ const HexGame = ({ levelData }: HexGameProps) => {
   useEffect(() => {
     updateFit();
     window.addEventListener('resize', updateFit);
-    return () => window.removeEventListener('resize', updateFit);
-  }, [updateFit]);
-
-  const flashLine = useCallback((axis: 'horizontal' | 'diagL' | 'diagR', lineIndex: number) => {
-    dispatch({ type: 'HIGHLIGHT', line: { axis, lineIndex } });
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    const start = performance.now();
-    const tick = (now: number) => {
-      if (now - start >= 250) {
-        dispatch({ type: 'HIGHLIGHT', line: null });
-        return;
-      }
-      animRef.current = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener('resize', updateFit);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-    animRef.current = requestAnimationFrame(tick);
-  }, []);
+  }, [updateFit]);
 
   const getCanvasPos = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -85,25 +125,34 @@ const HexGame = ({ levelData }: HexGameProps) => {
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (hexAnimRef.current?.phase === 'completing') return;
     const pos = getCanvasPos(e);
     if (!pos) return;
-    const cellId = hitTestHexCell(state.boardData, vtRef.current, pos.x, pos.y);
-    if (cellId !== null) dragStart.current = { x: pos.x, y: pos.y, cellId };
+    const cellId = hitTestHexCell(stateRef.current.boardData, vtRef.current, pos.x, pos.y);
+    if (cellId === null) return;
+    dragStart.current = { x: pos.x, y: pos.y, cellId };
+    hexAnimRef.current = { axis: 'horizontal', lineIndex: 0, angle: 0, direction: 1, phase: 'gesture' };
   };
 
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragStart.current) return;
+    if (!dragStart.current || !hexAnimRef.current) return;
     const pos = getCanvasPos(e);
     if (!pos) return;
     const dx = pos.x - dragStart.current.x;
     const dy = pos.y - dragStart.current.y;
-    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
-      const axis = snapToAxis(dx, -dy);
-      const lineIdx = state.boardData.cellToLine[axis]?.get(dragStart.current.cellId);
-      if (lineIdx !== undefined) {
-        dispatch({ type: 'HIGHLIGHT', line: { axis, lineIndex: lineIdx } });
-      }
-    }
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 2) return;
+
+    const axis = snapToAxis(dx, -dy);
+    const lineIdx = stateRef.current.boardData.cellToLine[axis]?.get(dragStart.current.cellId);
+    if (lineIdx === undefined) return;
+
+    // Determine swipe direction relative to perpendicular
+    const direction = (axis === 'horizontal') ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1);
+    const angle = Math.min(dist * Math.PI / 120, Math.PI * 0.85);
+
+    hexAnimRef.current = { axis, lineIndex: lineIdx, angle, direction, phase: 'gesture' };
+    startRaf();
   };
 
   const handlePointerUp = (e: React.MouseEvent | React.TouchEvent) => {
@@ -121,16 +170,17 @@ const HexGame = ({ levelData }: HexGameProps) => {
     }
     const dx = endX - dragStart.current.x;
     const dy = endY - dragStart.current.y;
-    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
-      const axis = snapToAxis(dx, -dy);
-      const lineIdx = state.boardData.cellToLine[axis]?.get(dragStart.current.cellId);
-      if (lineIdx !== undefined) {
-        dispatch({ type: 'SWIPE', move: { axis, lineIndex: lineIdx } });
-        flashLine(axis, lineIdx);
-      }
-    }
-    dispatch({ type: 'HIGHLIGHT', line: null });
     dragStart.current = null;
+
+    const anim = hexAnimRef.current;
+    if (!anim) return;
+
+    if (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD) {
+      anim.phase = 'completing';
+    } else {
+      anim.phase = 'reverting';
+    }
+    startRaf();
   };
 
   return (
