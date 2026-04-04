@@ -1,7 +1,6 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useReducer, useRef, useEffect, useCallback, useMemo } from 'react';
-import { api } from '@/lib/apiClient';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useReducer, useRef, useEffect, useCallback } from 'react';
+import { makeRng } from '@/lib/seededRandom';
 import { createSwipesInitialState, swipesReducer } from '@/games/minzzle-swipes/engine/reducer';
 import {
   renderSwipes,
@@ -9,7 +8,7 @@ import {
   hitTestCell,
   SwipesViewTransform,
 } from '@/games/minzzle-swipes/render/canvasRenderer';
-import type { SwipesLevelData } from '@/games/minzzle-swipes/engine/types';
+import type { SwipesLevelData, SwipesMove, ColorId } from '@/games/minzzle-swipes/engine/types';
 
 const SWIPE_THRESHOLD = 20;
 
@@ -124,7 +123,7 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
             onClick={() => navigate('/minzzle-swipes')}
             className="text-muted-foreground hover:text-foreground transition-colors font-body text-sm"
           >
-            ← Levels
+            ← Config
           </button>
           <h2 className="font-display text-lg font-bold neon-text tracking-wider">MINZZLE SWIPES</h2>
         </div>
@@ -170,7 +169,7 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
                   onClick={() => navigate('/minzzle-swipes')}
                   className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm hover:bg-primary/90 transition-colors"
                 >
-                  More Levels
+                  New Puzzle
                 </button>
               </div>
             </div>
@@ -197,51 +196,41 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
   );
 };
 
-// ── Page shell: fetch level from API, parse boardJson ──────────────────────────
+// ── Page shell: generate puzzle from URL search params ─────────────────────────
+
+const SCRAMBLE_COUNTS: Record<string, number> = { easy: 8, medium: 40, hard: 150 };
+const QUAD_COLORS = ['#2D63D9', '#D9B300', '#D92B2F', '#27A84A'];
+
+function buildSolvedBoard(rows: number, cols: number): ColorId[][] {
+  return Array.from({ length: rows }, (_, r) =>
+    Array.from({ length: cols }, (_, c) =>
+      QUAD_COLORS[((r >= rows / 2) ? 2 : 0) + ((c >= cols / 2) ? 1 : 0)]
+    )
+  );
+}
 
 const MinzzleSwipesPlayPage = () => {
-  const { levelId } = useParams();
-  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const rows = Math.max(2, Number(params.get('rows') ?? 4));
+  const cols = Math.max(2, Number(params.get('cols') ?? 4));
+  const difficulty = params.get('difficulty') ?? 'medium';
+  const seed = params.get('seed') ?? 'default';
 
-  const { data: level, isLoading, isError } = useQuery({
-    queryKey: ['minzzle-swipes', 'level', levelId],
-    queryFn: () => api.getLevel('minzzle-swipes', levelId!),
-    enabled: !!levelId,
+  const scrambleCount = SCRAMBLE_COUNTS[difficulty] ?? 15;
+  const rng = makeRng(seed);
+
+  const scrambleMoves: SwipesMove[] = Array.from({ length: scrambleCount }, () => {
+    const type = rng() < 0.5 ? 'row' : 'col' as 'row' | 'col';
+    return { type, index: Math.floor(rng() * (type === 'row' ? rows : cols)) };
   });
 
-  const levelData = useMemo((): SwipesLevelData | null => {
-    if (!level?.boardJson) return null;
-    try {
-      const board = JSON.parse(level.boardJson);
-      return { schemaVersion: level.schemaVersion, title: level.name, board };
-    } catch {
-      return null;
-    }
-  }, [level]);
+  const levelData: SwipesLevelData = {
+    schemaVersion: 1,
+    title: '',
+    board: { rows, cols, solved: buildSolvedBoard(rows, cols), scrambleMoves },
+  };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-body text-sm animate-pulse">Loading level…</p>
-      </div>
-    );
-  }
-
-  if (isError || !level || !levelData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
-        <p className="text-destructive font-body text-sm">Level not found.</p>
-        <button
-          onClick={() => navigate('/minzzle-swipes')}
-          className="text-muted-foreground hover:text-foreground font-body text-sm"
-        >
-          ← Back to levels
-        </button>
-      </div>
-    );
-  }
-
-  return <SwipesGame key={level.id} levelId={level.id} levelData={levelData} />;
+  return <SwipesGame key={seed + rows + cols + difficulty} levelId={seed} levelData={levelData} />;
 };
 
 export default MinzzleSwipesPlayPage;

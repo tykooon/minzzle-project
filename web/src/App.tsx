@@ -6,9 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HubPage from "./pages/HubPage";
 import MinzzleFivesLevelsPage from "./pages/MinzzleFivesLevelsPage";
 import MinzzleFivesPlayPage from "./pages/MinzzleFivesPlayPage";
-import MinzzleSwipesLevelsPage from "./pages/MinzzleSwipesLevelsPage";
+import MinzzleSwipesConfigPage from "./pages/MinzzleSwipesConfigPage";
 import MinzzleSwipesPlayPage from "./pages/MinzzleSwipesPlayPage";
-import MinzzleSwipesHexLevelsPage from "./pages/MinzzleSwipesHexLevelsPage";
+import MinzzleSwipesHexConfigPage from "./pages/MinzzleSwipesHexConfigPage";
 import MinzzleSwipesHexPlayPage from "./pages/MinzzleSwipesHexPlayPage";
 import NotFound from "./pages/NotFound";
 import AdminLevelsPage from "./pages/admin/AdminLevelsPage";
@@ -27,10 +27,10 @@ const App = () => (
           <Route path="/" element={<HubPage />} />
           <Route path="/minzzle-fives" element={<MinzzleFivesLevelsPage />} />
           <Route path="/minzzle-fives/play/:levelId" element={<MinzzleFivesPlayPage />} />
-          <Route path="/minzzle-swipes" element={<MinzzleSwipesLevelsPage />} />
-          <Route path="/minzzle-swipes/play/:levelId" element={<MinzzleSwipesPlayPage />} />
-          <Route path="/minzzle-swipes-hex" element={<MinzzleSwipesHexLevelsPage />} />
-          <Route path="/minzzle-swipes-hex/play/:levelId" element={<MinzzleSwipesHexPlayPage />} />
+          <Route path="/minzzle-swipes" element={<MinzzleSwipesConfigPage />} />
+          <Route path="/minzzle-swipes/play" element={<MinzzleSwipesPlayPage />} />
+          <Route path="/minzzle-swipes-hex" element={<MinzzleSwipesHexConfigPage />} />
+          <Route path="/minzzle-swipes-hex/play" element={<MinzzleSwipesHexPlayPage />} />
           <Route path="/admin/levels" element={<AdminLevelsPage />} />
           <Route path="/admin/levels/new" element={<AdminLevelEditorPage />} />
           <Route path="/admin/levels/:levelId/solve" element={<AdminLevelSolvePage />} />

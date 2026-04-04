@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/apiClient';
 
-const GAME_DISPLAY_META: Record<string, { icon: string; color: string; borderColor: string; description: string }> = {
+const GAME_DISPLAY_META: Record<string, { icon: string; color: string; borderColor: string; description: string; isGenerative?: boolean }> = {
   'minzzle-fives': {
     icon: '⬡',
     color: 'from-neon-cyan/20 to-neon-purple/20',
@@ -14,12 +14,14 @@ const GAME_DISPLAY_META: Record<string, { icon: string; color: string; borderCol
     color: 'from-neon-orange/20 to-neon-cyan/20',
     borderColor: 'border-neon-orange/30',
     description: 'Slide rows and columns to restore the color grid.',
+    isGenerative: true,
   },
   'minzzle-swipes-hex': {
     icon: '⬡',
     color: 'from-neon-purple/20 to-neon-green/20',
     borderColor: 'border-neon-purple/30',
     description: 'Slide hexagonal lines to restore the color pattern.',
+    isGenerative: true,
   },
 };
 
@@ -69,7 +71,7 @@ const HubPage = () => {
                       {meta.description}
                     </p>
                     <span className="inline-block mt-3 text-xs font-body text-primary/70 border border-primary/20 rounded-full px-3 py-1">
-                      {game.levelCount} levels
+                      {meta.isGenerative ? 'Generative' : `${game.levelCount} levels`}
                     </span>
                   </div>
                 </div>

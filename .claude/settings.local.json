@@ -18,7 +18,29 @@
       "Read(//c/Repos/pixel-perfect/src/games/fillby5/levels/**)",
       "Read(//c/Repos/pixel-perfect/src/**)",
       "Bash(xargs grep:*)",
-      "Bash(grep -r \"getBoundingClientRect\\\\|clientX\\\\|clientY\\\\|canvas.width\\\\|canvas.height\" /c/Repos/minzzle-project/web/src/pages/MinzzleSwipes* --include=\"*.tsx\" -A 2 -B 2)"
+      "Bash(grep -r \"getBoundingClientRect\\\\|clientX\\\\|clientY\\\\|canvas.width\\\\|canvas.height\" /c/Repos/minzzle-project/web/src/pages/MinzzleSwipes* --include=\"*.tsx\" -A 2 -B 2)",
+      "Bash(dotnet --version)",
+      "Bash(npm --version)",
+      "Bash(choco --version)",
+      "Bash(winget --version)",
+      "Bash(scoop --version)",
+      "Bash(pip --version)",
+      "Bash(where choco)",
+      "Read(//c/ProgramData/chocolatey/bin/**)",
+      "Read(//c/Repositories/minzzle-project/$LOCALAPPDATA/chocolatey/bin/**)",
+      "Read(//c/Repositories/minzzle-project/$USERPROFILE/.chocolatey/bin/**)",
+      "Bash(where scoop)",
+      "Read(//c/Repositories/minzzle-project/$USERPROFILE/scoop/shims/**)",
+      "Bash(where node)",
+      "Bash(where npm)",
+      "Read(//c/Repositories/minzzle-project/$PROGRAMFILES/nodejs/**)",
+      "Read(//c/Repositories/minzzle-project/$APPDATA/**)",
+      "Read(//c/Repositories/minzzle-project/$USERPROFILE/**)",
+      "Bash(where dotnet)",
+      "Read(//c/Program Files/dotnet/**)",
+      "Read(//c/Repositories/minzzle-project/$USERPROFILE/.dotnet/**)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" --version)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" --list-sdks)"
     ]
   }
 }

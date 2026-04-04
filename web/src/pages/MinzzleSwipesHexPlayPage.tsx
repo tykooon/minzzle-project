@@ -1,7 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useReducer, useRef, useEffect, useCallback, useMemo } from 'react';
-import { api } from '@/lib/apiClient';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useReducer, useRef, useEffect, useCallback } from 'react';
+import { makeRng } from '@/lib/seededRandom';
+import { generateHexBoard } from '@/games/minzzle-swipes-hex/engine/hexGrid';
 import { createHexInitialState, hexReducer } from '@/games/minzzle-swipes-hex/engine/reducer';
 import {
   renderHex,
@@ -141,7 +141,7 @@ const HexGame = ({ levelData }: HexGameProps) => {
             onClick={() => navigate('/minzzle-swipes-hex')}
             className="text-muted-foreground hover:text-foreground transition-colors font-body text-sm"
           >
-            ← Levels
+            ← Config
           </button>
           <h2 className="font-display text-lg font-bold neon-text tracking-wider">SWIPES HEX</h2>
         </div>
@@ -187,7 +187,7 @@ const HexGame = ({ levelData }: HexGameProps) => {
                   onClick={() => navigate('/minzzle-swipes-hex')}
                   className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-body text-sm hover:bg-primary/90 transition-colors"
                 >
-                  More Levels
+                  New Puzzle
                 </button>
               </div>
             </div>
@@ -214,51 +214,35 @@ const HexGame = ({ levelData }: HexGameProps) => {
   );
 };
 
-// ── Page shell: fetch level from API, parse boardJson ──────────────────────────
+// ── Page shell: generate puzzle from URL search params ─────────────────────────
+
+const HEX_SCRAMBLE_COUNTS: Record<string, number> = { easy: 6, medium: 25, hard: 100 };
+const HEX_COLORS = ['#2D63D9', '#D9B300', '#27A84A', '#D92B2F', '#F08A12', '#E9EDF5'];
 
 const MinzzleSwipesHexPlayPage = () => {
-  const { levelId } = useParams();
-  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const side = Math.max(2, Number(params.get('side') ?? 3));
+  const difficulty = params.get('difficulty') ?? 'medium';
+  const seed = params.get('seed') ?? 'default';
 
-  const { data: level, isLoading, isError } = useQuery({
-    queryKey: ['minzzle-swipes-hex', 'level', levelId],
-    queryFn: () => api.getLevel('minzzle-swipes-hex', levelId!),
-    enabled: !!levelId,
+  const scrambleCount = HEX_SCRAMBLE_COUNTS[difficulty] ?? 12;
+  const rng = makeRng(seed);
+
+  const boardData = generateHexBoard(side);
+  const scrambleMoves: HexLevelData['scrambleMoves'] = Array.from({ length: scrambleCount }, () => {
+    const line = boardData.lines[Math.floor(rng() * boardData.lines.length)];
+    return { axis: line.axis, lineIndex: line.index };
   });
 
-  const levelData = useMemo((): HexLevelData | null => {
-    if (!level?.boardJson) return null;
-    try {
-      const board = JSON.parse(level.boardJson);
-      return { schemaVersion: level.schemaVersion, title: level.name, ...board };
-    } catch {
-      return null;
-    }
-  }, [level]);
+  const levelData: HexLevelData = {
+    schemaVersion: 1,
+    title: '',
+    side,
+    colors: HEX_COLORS,
+    scrambleMoves,
+  };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-body text-sm animate-pulse">Loading level…</p>
-      </div>
-    );
-  }
-
-  if (isError || !level || !levelData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
-        <p className="text-destructive font-body text-sm">Level not found.</p>
-        <button
-          onClick={() => navigate('/minzzle-swipes-hex')}
-          className="text-muted-foreground hover:text-foreground font-body text-sm"
-        >
-          ← Back to levels
-        </button>
-      </div>
-    );
-  }
-
-  return <HexGame key={level.id} levelId={level.id} levelData={levelData} />;
+  return <HexGame key={seed + side + difficulty} levelId={seed} levelData={levelData} />;
 };
 
 export default MinzzleSwipesHexPlayPage;
