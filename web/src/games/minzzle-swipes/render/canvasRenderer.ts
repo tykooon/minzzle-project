@@ -8,8 +8,7 @@ export interface SwipesAnimState {
 }
 
 const BG = '#070b12';
-const CELL_GAP = 8;
-const BORDER_RADIUS = 14;
+const CELL_GAP = 4;
 const HIGHLIGHT_ALPHA = 0.28;
 
 const HOME_INDICATOR_THICKNESS = 5;
@@ -187,7 +186,7 @@ function buildAnimatedRowTiles(
     const scale = 1 + DEPTH * (z / rowHalfWidth);
     const w = Math.max(1, (cs - gap) * scale);
     const x = projCenterX - w / 2;
-    const r = Math.max(1, BORDER_RADIUS * scale);
+    const r = Math.max(1, (cs - gap) * 0.05 * scale);
     return { color, x, y, w, h, r, z };
   });
 }
@@ -214,7 +213,7 @@ function buildAnimatedColTiles(
     const scale = 1 + DEPTH * (z / colHalfHeight);
     const h = Math.max(1, (cs - gap) * scale);
     const y = projCenterY - h / 2;
-    const r = Math.max(1, BORDER_RADIUS * scale);
+    const r = Math.max(1, (cs - gap) * 0.05 * scale);
     return { color: boardRow[col], x, y, w, h, r, z };
   });
 }
@@ -233,7 +232,7 @@ export function renderSwipes(
   ctx.fillRect(0, 0, canvasW, canvasH);
 
   const gap = CELL_GAP;
-  const r = BORDER_RADIUS;
+  const r = Math.max(2, (vt.cellSize - gap) * 0.05);
 
   drawHomeIndicators(ctx, vt, solved, board.rows, board.cols);
 

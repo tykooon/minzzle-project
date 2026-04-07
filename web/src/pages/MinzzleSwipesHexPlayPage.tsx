@@ -33,8 +33,6 @@ const HexGame = ({ levelData }: HexGameProps) => {
   const vtRef = useRef<HexViewTransform>({ offsetX: 0, offsetY: 0, scale: 80 });
   const [state, dispatch] = useReducer(hexReducer, levelData, createHexInitialState);
   const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
-
   const dragStart = useRef<{ x: number; y: number; cellId: number } | null>(null);
   const hexAnimRef = useRef<ActiveHexAnim | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -52,6 +50,12 @@ const HexGame = ({ levelData }: HexGameProps) => {
     renderHex(ctx, stateRef.current, vtRef.current, rect.width, rect.height, hexAnimRef.current ?? undefined);
     ctx.restore();
   }, []);
+
+  // Re-render on every state change (RESET, UNDO, SWIPE commit) unless rAF owns the canvas
+  useEffect(() => {
+    stateRef.current = state;
+    if (!hexAnimRef.current) renderFrame();
+  }, [state, renderFrame]);
 
   // ── rAF loop ─────────────────────────────────────────────────────────────
   const runAnimFrame = useCallback(() => {
@@ -267,7 +271,7 @@ const HexGame = ({ levelData }: HexGameProps) => {
 // ── Page shell: generate puzzle from URL search params ─────────────────────────
 
 const HEX_SCRAMBLE_COUNTS: Record<string, number> = { easy: 6, medium: 25, hard: 100 };
-const HEX_COLORS = ['#2D63D9', '#D9B300', '#27A84A', '#D92B2F', '#F08A12', '#E9EDF5'];
+const HEX_COLORS = ['#2D63D9', '#D9B300', '#27A84A', '#D92B2F', '#F08A12', '#B8C0CC'];
 
 const MinzzleSwipesHexPlayPage = () => {
   const [params] = useSearchParams();

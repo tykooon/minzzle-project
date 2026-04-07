@@ -13,7 +13,7 @@ const BG = '#070b12';
 const SQRT3 = Math.sqrt(3);
 
 const CELL_SCALE = 0.88;
-const CORNER_RADIUS = 6;
+const CORNER_RADIUS = 3;
 
 const HOME_LINE_WIDTH = 5;
 const HOME_LINE_OFFSET = 7;

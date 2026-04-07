@@ -31,8 +31,6 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
   const vtRef = useRef<SwipesViewTransform>({ offsetX: 0, offsetY: 0, cellSize: 60 });
   const [state, dispatch] = useReducer(swipesReducer, levelData, createSwipesInitialState);
   const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
-
   const dragStart = useRef<{ x: number; y: number; cell: [number, number] } | null>(null);
   const animRef = useRef<ActiveAnim | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -50,6 +48,12 @@ const SwipesGame = ({ levelData }: SwipesGameProps) => {
     renderSwipes(ctx, stateRef.current, vtRef.current, rect.width, rect.height, animRef.current ?? undefined);
     ctx.restore();
   }, []);
+
+  // Re-render on every state change (RESET, UNDO, SWIPE commit) unless rAF owns the canvas
+  useEffect(() => {
+    stateRef.current = state;
+    if (!animRef.current) renderFrame();
+  }, [state, renderFrame]);
 
   // ── rAF loop ─────────────────────────────────────────────────────────────
   const runAnimFrame = useCallback(() => {
