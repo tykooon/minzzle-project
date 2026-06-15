@@ -49,6 +49,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          printf 'Host *\n  ServerAliveInterval 30\n  ServerAliveCountMax 10\n  ConnectTimeout 60\n' >> ~/.ssh/config
 
       # ── Test SSH connection ───────────────────────────────────────
       - name: Test SSH
