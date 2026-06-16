@@ -13,8 +13,8 @@ Minzzle is a web-based puzzle game hub. Currently hosts one game: **Minzzle Five
 
 ### Backend — `/server`
 - **.NET 9** Minimal APIs (C#)
-- **No database** — in-memory store only (`InMemoryStore.cs`), seeded at startup
-- **No auth** — public API
+- **EF Core 9** — **PostgreSQL** in production, **SQLite** in local dev (selected by `Database:Provider` config). Prod applies migrations on startup; dev uses `EnsureCreated()`. Both seed Games/Levels from the embedded `Data/Seed/levels.snapshot.json` (`DbSeeder`) when empty — not from EF `HasData`.
+- **Auth**: cookie-based session with social OAuth (Google / Microsoft / Facebook). Login flow under `/api/auth/*`; admin endpoints gated by an `Admin` policy (email allowlist in `Auth:AdminEmails`). See `Api/Auth/`.
 - **Port**: 5129
 - Entry: `server/src/GamesHub.Server/Program.cs`
 

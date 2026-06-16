@@ -18,29 +18,30 @@ public static class LevelsEndpoints
             return level is null ? Results.NotFound() : Results.Ok(level);
         });
 
+        // ── Admin-only mutations ──────────────────────────────────────
         group.MapPost("/", (string gameId, SaveLevelRequest req, LevelsService svc) =>
         {
             var created = svc.CreateLevel(gameId, req);
             return Results.Created($"/api/games/{gameId}/levels/{created.Id}", created);
-        });
+        }).RequireAuthorization("Admin");
 
         group.MapPut("/{levelId}", (string gameId, string levelId, SaveLevelRequest req, LevelsService svc) =>
         {
             var updated = svc.UpdateLevel(gameId, levelId, req);
             return updated is null ? Results.NotFound() : Results.Ok(updated);
-        });
+        }).RequireAuthorization("Admin");
 
         group.MapPut("/{levelId}/solution", (string gameId, string levelId, SaveSolutionRequest req, LevelsService svc) =>
         {
             var updated = svc.SaveSolution(gameId, levelId, req.SolutionJson);
             return updated is null ? Results.NotFound() : Results.Ok(updated);
-        });
+        }).RequireAuthorization("Admin");
 
         group.MapDelete("/{levelId}", (string gameId, string levelId, LevelsService svc) =>
         {
             var deleted = svc.DeleteLevel(gameId, levelId);
             return deleted ? Results.NoContent() : Results.NotFound();
-        });
+        }).RequireAuthorization("Admin");
 
         return app;
     }

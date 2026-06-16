@@ -75,19 +75,33 @@ jobs:
             deploy/docker-compose.yml \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/docker-compose.yml"
 
-      # ── Sync SQLite database ──────────────────────────────────────
-      - name: Sync database
+      # ── Write production .env from secrets ─────────────────────────
+      # NOTE: this no longer ships a database file. Schema is created by EF
+      # migrations on container start; levels are seeded from the embedded
+      # snapshot. User data lives in the Postgres named volume and survives
+      # deploys. (Previously this step rsynced minzzle.db over production,
+      # which would wipe accounts/progress on every push.)
+      - name: Write production .env
         run: |
+          cat > /tmp/minzzle.env <<'EOF'
+          GITHUB_REPO_OWNER=${{ github.repository_owner }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minzzle;Username=minzzle;Password=${{ secrets.DB_PASSWORD }}
+          Authentication__Google__ClientId=${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          Authentication__Google__ClientSecret=${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
+          Authentication__Microsoft__ClientId=${{ secrets.OAUTH_MICROSOFT_CLIENT_ID }}
+          Authentication__Microsoft__ClientSecret=${{ secrets.OAUTH_MICROSOFT_CLIENT_SECRET }}
+          Authentication__Facebook__AppId=${{ secrets.OAUTH_FACEBOOK_APP_ID }}
+          Authentication__Facebook__AppSecret=${{ secrets.OAUTH_FACEBOOK_APP_SECRET }}
+          Auth__AdminEmails__0=${{ secrets.ADMIN_EMAIL }}
+          EOF
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "mkdir -p ~/minzzle/data"
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "mkdir -p ~/minzzle"
           rsync -avz \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            server/src/GamesHub.Server/Data/minzzle.db \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/data/minzzle.db"
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "rm -f ~/minzzle/data/minzzle.db-wal ~/minzzle/data/minzzle.db-shm"
+            /tmp/minzzle.env \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:~/minzzle/.env"
+          rm -f /tmp/minzzle.env
 
       # ── Pull new image & restart container ────────────────────────
       - name: Deploy server

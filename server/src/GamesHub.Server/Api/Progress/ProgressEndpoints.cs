@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using GamesHub.Server.Api.Auth;
 using GamesHub.Server.Services;
 
 namespace GamesHub.Server.Api.Progress;
@@ -6,13 +8,22 @@ public static class ProgressEndpoints
 {
     public static IEndpointRouteBuilder MapProgressEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/progress");
+        var group = app.MapGroup("/api/progress").RequireAuthorization();
 
-        group.MapGet("/{gameId}", (string gameId, ProgressService svc) =>
-            Results.Ok(svc.GetProgress(gameId)));
+        group.MapGet("/{gameId}", async (string gameId, ClaimsPrincipal user, ProgressService svc) =>
+        {
+            var userId = user.GetUserId();
+            if (userId is null) return Results.Unauthorized();
+            return Results.Ok(await svc.GetProgressAsync(userId, gameId));
+        });
 
-        group.MapPost("/{gameId}/{levelId}", (string gameId, string levelId, SaveProgressRequest req, ProgressService svc) =>
-            Results.Ok(svc.SaveProgress(gameId, levelId, req.Moves)));
+        group.MapPost("/{gameId}/{levelId}", async (
+            string gameId, string levelId, SaveProgressRequest req, ClaimsPrincipal user, ProgressService svc) =>
+        {
+            var userId = user.GetUserId();
+            if (userId is null) return Results.Unauthorized();
+            return Results.Ok(await svc.SaveProgressAsync(userId, gameId, levelId, req.Moves));
+        });
 
         return app;
     }

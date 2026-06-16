@@ -7,11 +7,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Production database -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.*" />
+    <!-- Local development database (no external infra required) -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+
+    <!-- OAuth social login providers -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="9.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Seed snapshot is embedded so it is always available at runtime (see DbSeeder) -->
+    <Content Remove="Data\Seed\levels.snapshot.json" />
+    <EmbeddedResource Include="Data\Seed\levels.snapshot.json" />
   </ItemGroup>
 
 </Project>

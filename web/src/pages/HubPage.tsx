@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/apiClient';
+import { UserMenu } from '@/components/UserMenu';
 
 const GAME_DISPLAY_META: Record<string, { icon: string; color: string; borderColor: string; description: string; isGenerative?: boolean }> = {
   'minzzle-fives': {
@@ -35,13 +36,16 @@ const HubPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border/50 px-6 py-5">
-        <h1 className="text-3xl font-display font-bold neon-text tracking-wider">
-          MINZZLE GAMES
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1 font-body">
-          Choose your puzzle
-        </p>
+      <header className="border-b border-border/50 px-6 py-5 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-display font-bold neon-text tracking-wider">
+            MINZZLE GAMES
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1 font-body">
+            Choose your puzzle
+          </p>
+        </div>
+        <UserMenu />
       </header>
 
       {/* Games Grid */}

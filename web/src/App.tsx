@@ -14,6 +14,8 @@ import NotFound from "./pages/NotFound";
 import AdminLevelsPage from "./pages/admin/AdminLevelsPage";
 import AdminLevelEditorPage from "./pages/admin/AdminLevelEditorPage";
 import AdminLevelSolvePage from "./pages/admin/AdminLevelSolvePage";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -23,20 +25,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HubPage />} />
-          <Route path="/minzzle-fives" element={<MinzzleFivesLevelsPage />} />
-          <Route path="/minzzle-fives/play/:levelId" element={<MinzzleFivesPlayPage />} />
-          <Route path="/minzzle-swipes" element={<MinzzleSwipesConfigPage />} />
-          <Route path="/minzzle-swipes/play" element={<MinzzleSwipesPlayPage />} />
-          <Route path="/minzzle-swipes-hex" element={<MinzzleSwipesHexConfigPage />} />
-          <Route path="/minzzle-swipes-hex/play" element={<MinzzleSwipesHexPlayPage />} />
-          <Route path="/admin/levels" element={<AdminLevelsPage />} />
-          <Route path="/admin/levels/new" element={<AdminLevelEditorPage />} />
-          <Route path="/admin/levels/:levelId/solve" element={<AdminLevelSolvePage />} />
-          <Route path="/admin/levels/:levelId" element={<AdminLevelEditorPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<HubPage />} />
+            <Route path="/minzzle-fives" element={<MinzzleFivesLevelsPage />} />
+            <Route path="/minzzle-fives/play/:levelId" element={<MinzzleFivesPlayPage />} />
+            <Route path="/minzzle-swipes" element={<MinzzleSwipesConfigPage />} />
+            <Route path="/minzzle-swipes/play" element={<MinzzleSwipesPlayPage />} />
+            <Route path="/minzzle-swipes-hex" element={<MinzzleSwipesHexConfigPage />} />
+            <Route path="/minzzle-swipes-hex/play" element={<MinzzleSwipesHexPlayPage />} />
+            <Route path="/admin/levels" element={<ProtectedRoute requireAdmin><AdminLevelsPage /></ProtectedRoute>} />
+            <Route path="/admin/levels/new" element={<ProtectedRoute requireAdmin><AdminLevelEditorPage /></ProtectedRoute>} />
+            <Route path="/admin/levels/:levelId/solve" element={<ProtectedRoute requireAdmin><AdminLevelSolvePage /></ProtectedRoute>} />
+            <Route path="/admin/levels/:levelId" element={<ProtectedRoute requireAdmin><AdminLevelEditorPage /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -33,17 +33,32 @@ nginx -t && systemctl reload nginx
 
 echo "==> Creating docker-compose working directory..."
 mkdir -p /home/ubuntu/minzzle
-# Copy docker-compose.yml and create a .env stub
+# Copy docker-compose.yml and create a .env stub.
+# NOTE: GitHub Actions overwrites this .env on every deploy from repo Secrets
+# (see deploy.yml "Write production .env"). The stub below documents the shape
+# and lets you run `docker compose up` once before the first CI deploy.
 cp /tmp/docker-compose.yml /home/ubuntu/minzzle/docker-compose.yml
 cat > /home/ubuntu/minzzle/.env <<'EOF'
 GITHUB_REPO_OWNER=REPLACE_ME
-# Future secrets go here (DB passwords, OAuth secrets, etc.)
+DB_PASSWORD=REPLACE_ME
+ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minzzle;Username=minzzle;Password=REPLACE_ME
+Authentication__Google__ClientId=
+Authentication__Google__ClientSecret=
+Authentication__Microsoft__ClientId=
+Authentication__Microsoft__ClientSecret=
+Authentication__Facebook__AppId=
+Authentication__Facebook__AppSecret=
+Auth__AdminEmails__0=
 EOF
 chown -R ubuntu:ubuntu /home/ubuntu/minzzle
 
 echo ""
 echo "==> Setup complete. Next steps:"
-echo "    1. Edit /home/ubuntu/minzzle/.env — set GITHUB_REPO_OWNER"
-echo "    2. Run: certbot --nginx -d minzzle.com -d www.minzzle.com"
-echo "    3. Add VPS_SSH_KEY, VPS_HOST, VPS_USER to GitHub repo Secrets"
+echo "    1. Run: certbot --nginx -d minzzle.com -d www.minzzle.com"
+echo "    2. Add deploy Secrets to GitHub: VPS_SSH_KEY, VPS_HOST, VPS_USER,"
+echo "       DB_PASSWORD, OAUTH_GOOGLE_CLIENT_ID/SECRET,"
+echo "       OAUTH_MICROSOFT_CLIENT_ID/SECRET, OAUTH_FACEBOOK_APP_ID/SECRET,"
+echo "       ADMIN_EMAIL"
+echo "    3. Register OAuth redirect URIs (prod + localhost) per provider:"
+echo "       https://minzzle.com/api/auth/signin-google|signin-microsoft|signin-facebook"
 echo "    4. Push to main — GitHub Actions will deploy automatically"

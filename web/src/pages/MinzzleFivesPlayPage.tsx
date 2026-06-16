@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReducer, useRef, useEffect, useCallback, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, LevelFull } from '@/lib/apiClient';
+import { useAuth } from '@/contexts/AuthContext';
 import { createInitialState, gameReducer } from '../games/minzzle-fives/engine/reducer';
 import { render, computeAutoFit, hitTestNode, ViewTransform } from '../games/minzzle-fives/render/canvasRenderer';
 import { useGestures } from '../games/minzzle-fives/input/useGestures';
@@ -170,12 +171,22 @@ export const MinzzleFivesGame = ({
 const MinzzleFivesPlayPage = () => {
   const { levelId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: level, isLoading, isError } = useQuery({
     queryKey: ['minzzle-fives', 'level', levelId],
     queryFn: () => api.getLevel('minzzle-fives', levelId!),
     enabled: !!levelId,
   });
+
+  // Persist progress for signed-in players when a level is solved.
+  const handleSolved = useCallback((moves: number[][]) => {
+    if (!user || !levelId) return;
+    api.saveProgress('minzzle-fives', levelId, moves.length)
+      .then(() => queryClient.invalidateQueries({ queryKey: ['progress', 'minzzle-fives'] }))
+      .catch(() => { /* progress is best-effort; ignore transient failures */ });
+  }, [user, levelId, queryClient]);
 
   if (isLoading) {
     return (
@@ -201,7 +212,7 @@ const MinzzleFivesPlayPage = () => {
     );
   }
 
-  return <MinzzleFivesGame key={level.id} level={level} />;
+  return <MinzzleFivesGame key={level.id} level={level} onSolved={handleSolved} />;
 };
 
 export default MinzzleFivesPlayPage;

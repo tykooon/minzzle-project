@@ -3,15 +3,42 @@
 #
 # Required .env vars:
 #   GITHUB_REPO_OWNER=<your-github-username>
+#   DB_PASSWORD=<strong-random-password>
+#   ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minzzle;Username=minzzle;Password=<DB_PASSWORD>
+#   Authentication__Google__ClientId / __ClientSecret
+#   Authentication__Microsoft__ClientId / __ClientSecret
+#   Authentication__Facebook__AppId / __AppSecret
+#   Auth__AdminEmails__0=<your-admin-email>
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minzzle
+      POSTGRES_USER: minzzle
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # named volume — survives deploys
+    ports:
+      - "127.0.0.1:5432:5432"   # local only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U minzzle -d minzzle"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   minzzle-server:
     image: ghcr.io/${GITHUB_REPO_OWNER}/minzzle-server:latest
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "127.0.0.1:5129:5129"   # only accessible locally; Nginx proxies from outside
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-    env_file: .env
-    volumes:
-      - ./data:/app/data   # SQLite database — bind mount so CI/CD can update it
+    env_file: .env   # connection string + OAuth secrets
+
+volumes:
+  postgres_data:
