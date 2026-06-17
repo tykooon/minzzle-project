@@ -11,6 +11,8 @@ import MinzzleSwipesPlayPage from "./pages/MinzzleSwipesPlayPage";
 import MinzzleSwipesHexConfigPage from "./pages/MinzzleSwipesHexConfigPage";
 import MinzzleSwipesHexPlayPage from "./pages/MinzzleSwipesHexPlayPage";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 import AdminLevelsPage from "./pages/admin/AdminLevelsPage";
 import AdminLevelEditorPage from "./pages/admin/AdminLevelEditorPage";
 import AdminLevelSolvePage from "./pages/admin/AdminLevelSolvePage";
@@ -25,6 +27,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HubPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="/minzzle-fives" element={<MinzzleFivesLevelsPage />} />
           <Route path="/minzzle-fives/play/:levelId" element={<MinzzleFivesPlayPage />} />
           <Route path="/minzzle-swipes" element={<MinzzleSwipesConfigPage />} />
